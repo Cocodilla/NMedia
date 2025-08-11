@@ -1,0 +1,2 @@
+<TextView
+tools:text="@sample/posts.json/data/author" />

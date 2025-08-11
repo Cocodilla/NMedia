@@ -1,4 +1,14 @@
 <resources>
-    <string name="app_name">FirstApp</string>
-    <string name="nmedia">NMedia!</string>
+
+    <string name="netology">Нетология. Университет интернет-профессий будущего</string>
+    <string name="published">21 мая в 18:36</string>
+    <string name="todo2" translatable="false">TODO2</string>
+    <string name="todo" translatable="false">TODO</string>
+    <string name="text">Привет! Это новая Нетология! Когда-то Нетология начичиналась с интенсивов поонлайн-маркетингу.Затем плявились курсы по дизайну,разработке,аналитике,управлению. Мы растем сами и помогаем расти студентам: от новичков до уверенных профессионалов. Но самое важное остается с нами: мы верим , что в каждом уже есть сила, которая заставляет хотеть больше,целиться выше, бежать быстрее. Наша миссия- помочь встать на путь роста и начать цепочку перемен.</string>
+    <string name="todo3">TODO3</string>
+    <string name="viewText">5000</string>
+    <string name="heartNum">10</string>
+    <string name="textNum">5</string>
+    <string name="todo4">TODO4</string>
+    <string name="todo5">TODO5</string>
 </resources>
