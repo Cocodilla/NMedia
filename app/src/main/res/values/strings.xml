@@ -5,10 +5,11 @@
     <string name="todo2" translatable="false">TODO2</string>
     <string name="todo" translatable="false">TODO</string>
     <string name="text">Привет! Это новая Нетология! Когда-то Нетология начичиналась с интенсивов поонлайн-маркетингу.Затем плявились курсы по дизайну,разработке,аналитике,управлению. Мы растем сами и помогаем расти студентам: от новичков до уверенных профессионалов. Но самое важное остается с нами: мы верим , что в каждом уже есть сила, которая заставляет хотеть больше,целиться выше, бежать быстрее. Наша миссия- помочь встать на путь роста и начать цепочку перемен.</string>
-    <string name="todo3">TODO3</string>
-    <string name="viewText">5000</string>
-    <string name="heartNum">10</string>
-    <string name="textNum">5</string>
-    <string name="todo4">TODO4</string>
-    <string name="todo5">TODO5</string>
+    <string name="todo3" translatable="false">TODO3</string>
+    <string name="viewText" translatable="false">5000</string>
+    <string name="heartNum" translatable="false">10</string>
+    <string name="textNum" translatable="false">5</string>
+    <string name="todo4" translatable="false">TODO4</string>
+    <string name="todo5" translatable="false">TODO5</string>
+    <string name="app_name">appname</string>
 </resources>
