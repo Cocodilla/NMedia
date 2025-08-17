@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="netology">Нетология. Университет интернет-профессий будущего</string>
     <string name="author">Нетология. Университет интернет-профессий будущего</string>
     <string name="published">21 мая в 18:36</string>
     <string name="app_name">appname</string>
