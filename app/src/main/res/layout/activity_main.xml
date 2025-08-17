@@ -28,7 +28,7 @@
         android:layout_marginHorizontal="16dp"
         android:ellipsize="end"
         android:maxLines="1"
-        android:text="@string/netology"
+        tools:text="@string/author"
         app:layout_constraintBottom_toTopOf="@+id/published"
         app:layout_constraintEnd_toStartOf="@+id/menu"
         app:layout_constraintStart_toEndOf="@+id/avatar"
@@ -50,13 +50,13 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:contentDescription="@string/todo2"
-        app:layout_constraintEnd_toEndOf="@+id/viewsText"
+        app:layout_constraintEnd_toEndOf="@+id/views"
         app:layout_constraintStart_toEndOf="@+id/author"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/baseline_more_vert_24" />
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/content"
         android:layout_margin="16dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -65,13 +65,15 @@
         app:layout_constraintEnd_toStartOf="@+id/menu"
         app:layout_constraintStart_toStartOf="@+id/avatar"/>
 
-    <ImageView
-        android:id="@+id/heart"
+    <ImageButton
+        android:id="@+id/like"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:scaleType="centerCrop"
         android:layout_margin="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="@string/todo3"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintTop_toBottomOf="@+id/content"
         app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@drawable/heart"
          />
@@ -83,31 +85,31 @@
         android:contentDescription="@string/todo4"
         app:srcCompat="@drawable/share"
         app:layout_constraintStart_toStartOf="@+id/author"
-        app:layout_constraintTop_toTopOf="@+id/heartText"
+        app:layout_constraintTop_toTopOf="@+id/likes"
         />
 
     <ImageView
-        android:id="@+id/views"
+        android:id="@+id/view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="6dp"
         android:contentDescription="@string/todo5"
         app:srcCompat="@drawable/view"
-        app:layout_constraintEnd_toStartOf="@+id/viewsText"
-        app:layout_constraintTop_toTopOf="@+id/viewsText"
+        app:layout_constraintEnd_toStartOf="@+id/views"
+        app:layout_constraintTop_toTopOf="@+id/views"
         />
 
     <TextView
-        android:id="@+id/heartText"
+        android:id="@+id/likes"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
         android:text="@string/heartNum"
-        app:layout_constraintTop_toTopOf="@+id/heart"
-        app:layout_constraintStart_toEndOf="@id/heart" />
+        app:layout_constraintTop_toTopOf="@+id/like"
+        app:layout_constraintStart_toEndOf="@id/like" />
 
     <TextView
-        android:id="@+id/shareText"
+        android:id="@+id/shares"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="6dp"
@@ -116,12 +118,12 @@
         app:layout_constraintStart_toEndOf="@id/share"/>
 
     <TextView
-        android:id="@+id/viewsText"
+        android:id="@+id/views"
         android:layout_margin="16dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/viewText"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
+        app:layout_constraintTop_toBottomOf="@+id/content"
         app:layout_constraintEnd_toEndOf="parent"
       />
 
