@@ -47,15 +47,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.share.setOnClickListener {
-            // Здесь нужно добавить вызов метода share() в ViewModel
-            // viewModel.share()
-            // Временно оставляем как есть, но нужно будет реализовать
-            val currentPost = viewModel.data.value
-            currentPost?.let { post ->
-                val updatedPost = post.copy(shares = post.shares + 1)
-                // Нужно обновить данные в репозитории через ViewModel
-                // viewModel.updatePost(updatedPost)
-            }
+            viewModel.share()
         }
 
         binding.root.setOnClickListener {

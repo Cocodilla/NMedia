@@ -32,5 +32,11 @@ class PostRepositoryMemory : PostRepository {
         data.value = updatedPost
     }
 
+    override fun share() {
+        data.value?.let { currentPost ->
+            val updatedPost = currentPost.copy(shares = currentPost.shares + 1)
+            data.value = updatedPost
+        }
+    }
     override fun get(): LiveData<Post> = data
 }
