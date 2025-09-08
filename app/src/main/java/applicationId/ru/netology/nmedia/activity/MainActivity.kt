@@ -4,58 +4,49 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import applicationId.ru.netology.nmedia.R
+import androidx.recyclerview.widget.LinearLayoutManager
+import applicationId.ru.netology.nmedia.adapter.PostAdapter
 import applicationId.ru.netology.nmedia.databinding.ActivityMainBinding
+import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
-import ru.netology.nmedia.util.NumberFormatter
+
+
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private val viewModel: PostViewModel by viewModels()
+    private lateinit var adapter: PostAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        Log.d("OnCreate", "OnCreate")
+        Log.d("MainActivity", "onCreate")
         Log.d("MainActivity", "MainActivity hashCode ${this.hashCode()}")
+        Log.d("MainActivity", "ViewModel hashCode ${viewModel.hashCode()}")
 
-
-
-        val viewModel: PostViewModel by viewModels()
-        Log.d("viewModel", "viewModel hashCode ${this.hashCode()}")
-
-        viewModel.data.observe(this) { post ->
-            binding.apply {
-                author.text = post.author
-                published.text = post.published
-                content.text = post.content
-                shares.text = NumberFormatter.formatCount(post.shares)
-                views.text = NumberFormatter.formatCount(post.views)
-                likes.text = NumberFormatter.formatCount(post.likes)
-
-                if (post.likedByMe) {
-                    like.setImageResource(R.drawable.love_like_heart_icon_196980)
-                } else {
-                    like.setImageResource(R.drawable.heart)
+        // Инициализация адаптера
+        adapter = PostAdapter(
+            object : PostAdapter.OnLikeListener {
+                override fun onLike(post: Post) {
+                    viewModel.like(post.id)
+                }
+            },
+            object : PostAdapter.OnShareListener {
+                override fun onShare(post: Post) {
+                    viewModel.share(post.id)
                 }
             }
-        }
+        )
 
-        binding.like.setOnClickListener {
-            viewModel.like()
-        }
+        // Настройка RecyclerView
+        binding.postsRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.postsRecyclerView.adapter = adapter
 
-        binding.share.setOnClickListener {
-            viewModel.share()
-        }
-
-        binding.root.setOnClickListener {
-            Log.d("MainActivity", "Root container clicked")
-        }
-
-        binding.avatar.setOnClickListener {
-            Log.d("MainActivity", "Avatar clicked")
+        // Подписка на изменения данных
+        viewModel.data.observe(this) { posts ->
+            adapter.submitList(posts)
         }
     }
 
