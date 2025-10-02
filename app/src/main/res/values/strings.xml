@@ -12,4 +12,13 @@
     <string name="todo4" translatable="false">TODO4</string>
     <string name="todo5" translatable="false">TODO5</string>
     <string name="app_name">VK</string>
+    <string name="menu_remove">Remove</string>
+    <string name="post_text" translatable="false">Write your post</string>
+    <string name="save_button_text">Save</string>
+    <string name="сохранить">Сохранить</string>
+    <string name="отменить" translatable="false">Отменить</string>
+    <string name="cancel" translatable="false">Отменить</string>
+    <string name="update_button_text">обновить</string>
+
+
 </resources>

@@ -1,20 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.MainActivity">
+    tools:context=".activity.MainActivity"
+    android:id="@+id/main">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/postsRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:id="@+id/list"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contextClickable="true"
+        android:minHeight="48dp"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomPanel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/card_post" />
+
+    <!-- Панель редактирования -->
+    <TextView
+        android:id="@+id/editingTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Редактирование поста"
+        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:background="@color/white"
+        app:layout_constraintEnd_toStartOf="@+id/buttonCancel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/bottomPanel" />
+
+    <!-- Кнопка отмены -->
+    <ImageButton
+        android:id="@+id/buttonCancel"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/cancel"
+        app:layout_constraintBottom_toBottomOf="@+id/editingTitle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/editingTitle" />
+
+    <!-- Группа для управления видимостью панели редактирования -->
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/editingModeGroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="editingTitle,buttonCancel" />
+
+    <!-- Нижняя панель с полем ввода -->
+    <LinearLayout
+        android:id="@+id/bottomPanel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@android:color/white"
+        android:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <EditText
+            android:id="@+id/content"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="@dimen/common_spacing"
+            android:layout_marginTop="@dimen/common_spacing"
+            android:layout_marginBottom="@dimen/common_spacing"
+            android:background="@android:color/transparent"
+            android:hint="@string/post_text"
+            android:importantForAutofill="no"
+            android:inputType="textMultiLine"
+            android:maxLines="3"
+            android:minHeight="48dp"
+            android:padding="@dimen/common_spacing"
+            android:textColor="@color/black"
+            android:textColorHint="@color/grey_600" />
+
+        <Button
+            android:id="@+id/save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="@dimen/common_spacing"
+            android:layout_marginStart="8dp"
+            android:minHeight="48dp"
+            android:minWidth="64dp"
+            android:text="@string/save_button_text" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
