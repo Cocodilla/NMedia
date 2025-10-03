@@ -42,8 +42,6 @@ dependencies {
     // Уберите дублирующиеся зависимости
     implementation libs.androidx.room.ktx
     implementation libs.firebase.ai
-
-    implementation libs.androidx.recyclerview.v132
     testImplementation libs.androidx.core.testing
     implementation libs.androidx.lifecycle.viewmodel.ktx
     implementation libs.androidx.lifecycle.livedata.ktx

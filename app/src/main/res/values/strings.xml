@@ -19,6 +19,8 @@
     <string name="отменить" translatable="false">Отменить</string>
     <string name="cancel" translatable="false">Отменить</string>
     <string name="update_button_text">обновить</string>
+    <string name="редактировать" translatable="false">Редактировать</string>
+    <string name="удалить" translatable="false">Удалить</string>
 
 
 </resources>

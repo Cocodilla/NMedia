@@ -13,30 +13,15 @@ import applicationId.ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.util.NumberFormatter
 
 class PostAdapter(
-    private val onLikeListener: OnLikeListener,
-    private val onShareListener: OnShareListener,
-    private val onRemoveListener: OnRemoveListener
+    private val interactionListener: OnInteractionListener
 ) : ListAdapter<Post, PostAdapter.ViewHolder>(PostDiffCallback()) {
 
-    // Объявление интерфейсов внутри адаптера
-    interface OnLikeListener {
+    interface OnInteractionListener {
         fun onLike(post: Post)
-    }
-
-    interface OnShareListener {
         fun onShare(post: Post)
+        fun onRemove(post: Post)
+        fun onEdit(post: Post)
     }
-
-    interface OnRemoveListener {
-        fun removeById(post: Post)
-    }
-
-    interface OnLongClickListener {
-        fun onLongClick(post: Post)
-    }
-
-    // Публичное свойство для установки извне
-    var onLongClickListener: OnLongClickListener? = null
 
     // ViewHolder для элемента списка
     inner class ViewHolder(
@@ -49,7 +34,7 @@ class PostAdapter(
             // Установка длинного нажатия на весь элемент
             itemView.setOnLongClickListener {
                 currentPost?.let { post ->
-                    this@PostAdapter.onLongClickListener?.onLongClick(post)
+                    interactionListener.onEdit(post)
                     true
                 } ?: false
             }
@@ -62,13 +47,13 @@ class PostAdapter(
 
             binding.like.setOnClickListener {
                 currentPost?.let { post ->
-                    onLikeListener.onLike(post)
+                    interactionListener.onLike(post)
                 }
             }
 
             binding.share.setOnClickListener {
                 currentPost?.let { post ->
-                    onShareListener.onShare(post)
+                    interactionListener.onShare(post)
                 }
             }
         }
@@ -94,8 +79,12 @@ class PostAdapter(
                 inflate(R.menu.menu_post)
                 setOnMenuItemClickListener { item ->
                     when (item.itemId) {
+                        R.id.edit -> {
+                            interactionListener.onEdit(post)
+                            true
+                        }
                         R.id.remove -> {
-                            onRemoveListener.removeById(post)
+                            interactionListener.onRemove(post)
                             true
                         }
                         else -> false

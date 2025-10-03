@@ -29,28 +29,26 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("MainActivity", "onCreate")
 
-        // Инициализация адаптера
-        adapter = PostAdapter(
-            object : PostAdapter.OnLikeListener {
-                override fun onLike(post: Post) {
-                    viewModel.like(post.id)
-                }
-            },
-            object : PostAdapter.OnShareListener {
-                override fun onShare(post: Post) {
-                    viewModel.share(post.id)
-                }
-            },
-            object : PostAdapter.OnRemoveListener {
-                override fun removeById(post: Post) {
-                    viewModel.removeById(post.id)
-                    // Если удаляем пост, который редактируется, выходим из режима редактирования
-                    if (viewModel.editablePost.value?.id == post.id) {
-                        viewModel.cancelEditing()
-                    }
+        adapter = PostAdapter(object : PostAdapter.OnInteractionListener {
+            override fun onLike(post: Post) {
+                viewModel.like(post.id)
+            }
+
+            override fun onShare(post: Post) {
+                viewModel.share(post.id)
+            }
+
+            override fun onRemove(post: Post) {
+                viewModel.removeById(post.id)
+                if (viewModel.editablePost.value?.id == post.id) {
+                    viewModel.cancelEditing()
                 }
             }
-        )
+
+            override fun onEdit(post: Post) {
+                viewModel.setPostForEditing(post)
+            }
+        })
 
         // Настройка RecyclerView
         binding.list.layoutManager = LinearLayoutManager(this)
@@ -88,14 +86,6 @@ class MainActivity : AppCompatActivity() {
         // Регистрируем контекстное меню для RecyclerView
         registerForContextMenu(binding.list)
 
-        // Обработчик долгого нажатия для выбора поста для редактирования
-        adapter.onLongClickListener = object : PostAdapter.OnLongClickListener {
-            override fun onLongClick(post: Post) {
-                selectedPost = post
-                viewModel.setPostForEditing(post)
-            }
-        }
-
         // Обработчик кнопки Save/Update для добавления нового поста или обновления существующего
         binding.save.setOnClickListener {
             val content = binding.content.text.toString().trim()
@@ -117,10 +107,15 @@ class MainActivity : AppCompatActivity() {
     // Обрабатываем выбор пункта меню
     override fun onContextItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
+            R.id.edit -> {
+                selectedPost?.let { post ->
+                    viewModel.setPostForEditing(post)
+                }
+                true
+            }
             R.id.remove -> {
                 selectedPost?.let { post ->
                     viewModel.removeById(post.id)
-                    // Если удаляем пост, который редактируется, выходим из режима редактирования
                     if (viewModel.editablePost.value?.id == post.id) {
                         viewModel.cancelEditing()
                     }
