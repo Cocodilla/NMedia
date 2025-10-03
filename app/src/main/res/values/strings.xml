@@ -11,16 +11,17 @@
     <string name="textNum" translatable="false">5</string>
     <string name="todo4" translatable="false">TODO4</string>
     <string name="todo5" translatable="false">TODO5</string>
-    <string name="app_name">VK</string>
-    <string name="menu_remove">Remove</string>
-    <string name="post_text" translatable="false">Write your post</string>
-    <string name="save_button_text">Save</string>
-    <string name="сохранить">Сохранить</string>
-    <string name="отменить" translatable="false">Отменить</string>
-    <string name="cancel" translatable="false">Отменить</string>
-    <string name="update_button_text">обновить</string>
+    <string name="app_name">NMedia</string>
+    <string name="post_text" translatable="false">Что у вас нового?</string>
+    <string name="save_button_text">Сохранить</string>
+    <string name="update_button_text">Обновить</string>
+    <string name="cancel" translatable="false">Отмена</string>
     <string name="редактировать" translatable="false">Редактировать</string>
     <string name="удалить" translatable="false">Удалить</string>
+    <string name="сохранить" translatable="false">Сохранить</string>
+    <string name="отменить" translatable="false">Отменить</string>
+    <string name="editing_title" translatable="false">Редактирование поста</string>
+
 
 
 </resources>

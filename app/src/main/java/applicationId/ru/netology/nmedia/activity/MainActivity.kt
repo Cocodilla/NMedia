@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity() {
 
         Log.d("MainActivity", "onCreate")
 
+        // Инициализация адаптера
         adapter = PostAdapter(object : PostAdapter.OnInteractionListener {
             override fun onLike(post: Post) {
                 viewModel.like(post.id)
@@ -40,6 +41,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onRemove(post: Post) {
                 viewModel.removeById(post.id)
+                // Если удаляем пост, который редактируется, выходим из режима редактирования
                 if (viewModel.editablePost.value?.id == post.id) {
                     viewModel.cancelEditing()
                 }
@@ -62,7 +64,7 @@ class MainActivity : AppCompatActivity() {
         // Подписка на режим редактирования
         viewModel.editablePost.observe(this) { post ->
             if (post != null) {
-                // Показываем панель редактирования и заполняем поле
+                // Показываем элементы редактирования (заголовок и крестик)
                 binding.editingModeGroup.visibility = View.VISIBLE
                 binding.content.setText(post.content)
                 // Перемещаем курсор в конец текста
@@ -70,7 +72,7 @@ class MainActivity : AppCompatActivity() {
                 // Меняем текст кнопки на "Обновить" в режиме редактирования
                 binding.save.text = getString(R.string.update_button_text)
             } else {
-                // Скрываем панель редактирования и очищаем поле
+                // Скрываем элементы редактирования
                 binding.editingModeGroup.visibility = View.GONE
                 binding.content.text.clear()
                 // Возвращаем текст кнопки на "Сохранить" в режиме создания
@@ -78,7 +80,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Обработчик кнопки отмены редактирования
+        // Обработчик кнопки отмены редактирования (крестик)
         binding.buttonCancel.setOnClickListener {
             viewModel.cancelEditing()
         }
@@ -116,6 +118,7 @@ class MainActivity : AppCompatActivity() {
             R.id.remove -> {
                 selectedPost?.let { post ->
                     viewModel.removeById(post.id)
+                    // Если удаляем пост, который редактируется, выходим из режима редактирования
                     if (viewModel.editablePost.value?.id == post.id) {
                         viewModel.cancelEditing()
                     }
