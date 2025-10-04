@@ -10,7 +10,7 @@ class PostViewModelFactory(
 
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        // Check if the requested ViewModel is PostViewModel
+        // Проверка если запрашиваемая ViewModel это PostViewModel
         if (modelClass.isAssignableFrom(PostViewModel::class.java)) {
             return PostViewModel(repository) as T
         }

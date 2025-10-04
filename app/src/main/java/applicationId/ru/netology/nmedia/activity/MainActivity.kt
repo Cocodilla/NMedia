@@ -98,37 +98,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Создаем контекстное меню
-    override fun onCreateContextMenu(menu: ContextMenu, v: View, menuInfo: ContextMenu.ContextMenuInfo?) {
-        super.onCreateContextMenu(menu, v, menuInfo)
-        if (v.id == R.id.list) {
-            menuInflater.inflate(R.menu.menu_post, menu)
-        }
-    }
-
-    // Обрабатываем выбор пункта меню
-    override fun onContextItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.edit -> {
-                selectedPost?.let { post ->
-                    viewModel.setPostForEditing(post)
-                }
-                true
-            }
-            R.id.remove -> {
-                selectedPost?.let { post ->
-                    viewModel.removeById(post.id)
-                    // Если удаляем пост, который редактируется, выходим из режима редактирования
-                    if (viewModel.editablePost.value?.id == post.id) {
-                        viewModel.cancelEditing()
-                    }
-                }
-                true
-            }
-            else -> super.onContextItemSelected(item)
-        }
-    }
-
     override fun onStart() {
         super.onStart()
         Log.d("MainActivity", "onStart")

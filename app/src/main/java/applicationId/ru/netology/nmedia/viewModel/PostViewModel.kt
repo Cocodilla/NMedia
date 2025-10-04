@@ -5,8 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.repository.PostRepository
-
-// PostViewModel.kt
 class PostViewModel(private val repository: PostRepository) : ViewModel() {
     private val _data = MutableLiveData<List<Post>>()
     val data: LiveData<List<Post>> = _data
@@ -21,7 +19,6 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
     fun setPostForEditing(post: Post) {
         _editablePost.value = post
     }
-
     fun save(content: String) {
         val editablePost = _editablePost.value
         if (editablePost != null) {
@@ -30,9 +27,9 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
             repository.save(updatedPost)
             _editablePost.value = null
         } else {
-            // Создание нового поста
+            // Создание нового поста с уникальным ID
             val newPost = Post(
-                id = 0, // 0 для нового поста
+                id = System.currentTimeMillis(), // Используем временную метку как ID
                 author = "Me",
                 content = content,
                 published = "Now",
@@ -43,7 +40,6 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
             )
             repository.save(newPost)
         }
-        // Обновляем данные
         _data.value = repository.data.value
     }
 
