@@ -43,6 +43,7 @@ dependencies {
     implementation libs.androidx.room.ktx
     implementation libs.firebase.ai
     testImplementation libs.androidx.core.testing
+    implementation libs.material
     implementation libs.androidx.lifecycle.viewmodel.ktx
     implementation libs.androidx.lifecycle.livedata.ktx
     implementation libs.androidx.activity.ktx

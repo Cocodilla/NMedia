@@ -64,13 +64,10 @@ class PostAdapter(
                 author.text = post.author
                 published.text = post.published
                 content.text = post.content
-                likes.text = NumberFormatter.formatCount(post.likes)
-                shares.text = NumberFormatter.formatCount(post.shares)
                 views.text = NumberFormatter.formatCount(post.views)
-
-                like.setImageResource(
-                    if (post.likedByMe) R.drawable.love_like_heart_icon_196980 else R.drawable.heart
-                )
+like.isChecked = post.likedByMe
+                like.text = post.likes.toString()
+                share.text = post.shares.toString()
             }
         }
 
