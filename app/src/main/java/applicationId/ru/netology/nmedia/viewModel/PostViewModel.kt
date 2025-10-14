@@ -5,20 +5,17 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.repository.PostRepository
+
 class PostViewModel(private val repository: PostRepository) : ViewModel() {
-    private val _data = MutableLiveData<List<Post>>()
-    val data: LiveData<List<Post>> = _data
+    val data: LiveData<List<Post>> = repository.data
 
     private val _editablePost = MutableLiveData<Post?>(null)
     val editablePost: LiveData<Post?> = _editablePost
 
-    init {
-        _data.value = repository.data.value ?: emptyList()
-    }
-
     fun setPostForEditing(post: Post) {
         _editablePost.value = post
     }
+
     fun save(content: String) {
         val editablePost = _editablePost.value
         if (editablePost != null) {
@@ -29,18 +26,23 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
         } else {
             // Создание нового поста с уникальным ID
             val newPost = Post(
-                id = System.currentTimeMillis(), // Используем временную метку как ID
+                id = generateId(),
                 author = "Me",
                 content = content,
                 published = "Now",
-                likedByMe = false,
-                likes = 0,
-                shares = 0,
-                views = 0
+                video = if (content.contains("rutube", ignoreCase = true)) "https://rutube.ru/video/6550a91e7e523f9503bed47e4c46d0cb" else null
             )
             repository.save(newPost)
         }
-        _data.value = repository.data.value
+    }
+
+    fun edit(postId: Long, content: String) {
+        val currentPosts = data.value ?: return
+        val existingPost = currentPosts.find { it.id == postId }
+        existingPost?.let { post ->
+            val updatedPost = post.copy(content = content)
+            repository.save(updatedPost)
+        }
     }
 
     fun cancelEditing() {
@@ -49,12 +51,10 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
 
     fun like(id: Long) {
         repository.like(id)
-        _data.value = repository.data.value
     }
 
     fun share(id: Long) {
         repository.share(id)
-        _data.value = repository.data.value
     }
 
     fun removeById(id: Long) {
@@ -63,6 +63,9 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
         if (_editablePost.value?.id == id) {
             _editablePost.value = null
         }
-        _data.value = repository.data.value
+    }
+
+    private fun generateId(): Long {
+        return System.currentTimeMillis()
     }
 }

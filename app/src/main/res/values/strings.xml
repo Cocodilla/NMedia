@@ -21,7 +21,9 @@
     <string name="сохранить" translatable="false">Сохранить</string>
     <string name="отменить" translatable="false">Отменить</string>
     <string name="editing_title" translatable="false">Редактирование поста</string>
-
+    <string name="chooser_share_post">Share post</string>
+    <string name="error_empty_content">Пусто</string>
+    <string name="chooser_play_video">Play video with</string>
 
 
 </resources>

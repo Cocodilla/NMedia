@@ -1,111 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activity.MainActivity"
-    android:id="@+id/main">
+    tools:context=".activity.MainActivity">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/list"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:contextClickable="true"
         android:minHeight="48dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@+id/bottomPanel"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/card_post" />
 
-    <!-- Нижняя панель с полем ввода и кнопками -->
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/bottomPanel"
-        android:layout_width="0dp"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/add"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:elevation="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        android:layout_gravity="bottom|end"
+        android:layout_margin="@dimen/common_spacing"
+        app:srcCompat="@drawable/outline_add_24" />
 
-        <!-- Заголовок редактирования (скрыт по умолчанию) -->
-        <TextView
-            android:id="@+id/editingTitle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:text="@string/editing_title"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-            android:paddingStart="16dp"
-            android:paddingTop="12dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="8dp"
-            android:visibility="gone"
-            app:layout_constraintEnd_toStartOf="@+id/buttonCancel"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <!-- Кнопка отмены редактирования (крестик) -->
-        <ImageButton
-            android:id="@+id/buttonCancel"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/cancel"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/editingTitle"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/editingTitle" />
-
-        <!-- Поле ввода контента -->
-        <EditText
-            android:id="@+id/content"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"
-            android:background="@android:color/transparent"
-            android:hint="@string/post_text"
-            android:importantForAutofill="no"
-            android:inputType="textMultiLine"
-            android:maxLines="3"
-            android:minHeight="48dp"
-            android:padding="8dp"
-            android:textColor="@color/black"
-            android:textColorHint="@color/grey_600"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/save"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editingTitle" />
-
-        <!-- Кнопка сохранения/обновления -->
-        <Button
-            android:id="@+id/save"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="16dp"
-            android:minHeight="48dp"
-            android:minWidth="64dp"
-            android:text="@string/save_button_text"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/editingTitle" />
-
-        <!-- Группа для управления видимостью элементов редактирования -->
-        <androidx.constraintlayout.widget.Group
-            android:id="@+id/editingModeGroup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:constraint_referenced_ids="editingTitle,buttonCancel" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

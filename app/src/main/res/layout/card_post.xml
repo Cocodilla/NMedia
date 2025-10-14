@@ -53,6 +53,46 @@
         app:layout_constraintEnd_toStartOf="@+id/menu"
         app:layout_constraintStart_toStartOf="@+id/avatar"/>
 
+    <!-- Блок для видео -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/videoGroup"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/content">
+
+        <!-- VideoView для воспроизведения -->
+        <VideoView
+            android:id="@+id/videoPlayer"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Кнопка Play поверх VideoView -->
+        <ImageButton
+            android:id="@+id/playButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:scaleType="center"
+            android:src="@drawable/outline_arrow_right_24"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/like"
         android:minWidth="0dp"
@@ -98,6 +138,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         app:icon="@drawable/baseline_more_vert_24"
+        app:iconGravity="textEnd"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

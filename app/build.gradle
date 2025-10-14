@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id 'kotlin-parcelize'
 }
 
 android {
@@ -39,7 +40,6 @@ android {
 }
 
 dependencies {
-    // Уберите дублирующиеся зависимости
     implementation libs.androidx.room.ktx
     implementation libs.firebase.ai
     testImplementation libs.androidx.core.testing

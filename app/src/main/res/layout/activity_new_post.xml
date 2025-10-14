@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activity.NewPostActivity">
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="100dp"
+        android:clipToPadding="false">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- Заголовок редактирования -->
+            <TextView
+                android:id="@+id/editingTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="@string/editing_title"
+                android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                android:paddingStart="16dp"
+                android:paddingTop="12dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="8dp"
+                android:visibility="gone"
+                app:layout_constraintEnd_toStartOf="@+id/buttonCancel"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Кнопка отмены редактирования -->
+            <ImageButton
+                android:id="@+id/buttonCancel"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/cancel"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/editingTitle"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/editingTitle" />
+
+            <!-- Поле ввода контента -->
+            <EditText
+                android:id="@+id/content"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp"
+                android:background="@android:color/transparent"
+                android:hint="@string/post_text"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine"
+                android:maxLines="10"
+                android:minHeight="120dp"
+                android:padding="16dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/grey_600"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/editingTitle" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.bottomappbar.BottomAppBar
+        android:id="@+id/bottomAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        style="@style/Widget.Material3.BottomAppBar" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:contentDescription="TODO"
+        app:layout_anchor="@id/bottomAppBar"
+        app:srcCompat="@drawable/save" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
