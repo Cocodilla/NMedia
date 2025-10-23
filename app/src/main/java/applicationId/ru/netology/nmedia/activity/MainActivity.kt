@@ -12,14 +12,13 @@ import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.adapter.PostAdapter
 import applicationId.ru.netology.nmedia.databinding.ActivityMainBinding
 import applicationId.ru.netology.nmedia.dto.Post
-import applicationId.ru.netology.nmedia.repository.PostRepositoryMemory
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
 import applicationId.ru.netology.nmedia.viewModel.PostViewModelFactory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: PostViewModel by viewModels {
-        PostViewModelFactory(PostRepositoryMemory())
+        PostViewModelFactory(application)
     }
     private lateinit var adapter: PostAdapter
 
@@ -33,10 +32,8 @@ class MainActivity : AppCompatActivity() {
 
                 if (!content.isNullOrEmpty()) {
                     if (postId > 0L) {
-                        // Редактирование существующего поста
                         viewModel.edit(postId, content)
                     } else {
-                        // Создание нового поста
                         viewModel.save(content)
                     }
                 }
@@ -124,6 +121,8 @@ class MainActivity : AppCompatActivity() {
             val chooser = Intent.createChooser(intent, getString(R.string.chooser_play_video))
             if (intent.resolveActivity(packageManager) != null) {
                 startActivity(chooser)
+            } else {
+                Log.e("MainActivity", "No app found to handle video URL: $url")
             }
         }
     }

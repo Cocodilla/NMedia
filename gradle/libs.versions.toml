@@ -1,20 +1,21 @@
 [versions]
 agp = "8.13.0"
-coreTesting = "2.1.0"
-kotlin = "2.0.21"
-coreKtx = "1.10.1"
+coreTesting = "2.2.0"
+kotlin = "2.2.20"
+coreKtx = "1.17.0"
 junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
-appcompat = "1.6.1"
-lifecycleViewmodelKtx = "2.6.1"
-material = "1.10.0"
-activity = "1.8.0"
-constraintlayout = "2.1.4"
+junitVersion = "1.3.0"
+espressoCore = "3.7.0"
+appcompat = "1.7.1"
+lifecycleViewmodelKtx = "2.9.4"
+material = "1.13.0"
+activity = "1.11.0"
+constraintlayout = "2.2.1"
 recyclerview = "1.4.0"
-recyclerviewVersion = "1.3.2"
-roomKtx = "2.7.2"
-firebaseAi = "17.2.0"
+recyclerviewVersion = "1.4.0"
+roomKtx = "2.8.2"
+firebaseAi = "17.4.0"
+gson = "2.13.2"  # Актуальная версия на момент ответа
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx", version.ref = "activity" }
@@ -33,8 +34,14 @@ androidx-activity = { group = "androidx.activity", name = "activity", version.re
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "roomKtx" }
 firebase-ai = { group = "com.google.firebase", name = "firebase-ai", version.ref = "firebaseAi" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+
+
+
+
+
 

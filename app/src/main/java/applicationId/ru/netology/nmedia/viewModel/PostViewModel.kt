@@ -1,12 +1,16 @@
 package applicationId.ru.netology.nmedia.viewModel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.repository.PostRepository
+import applicationId.ru.netology.nmedia.repository.PostRepositoryFilesImpl
 
-class PostViewModel(private val repository: PostRepository) : ViewModel() {
+
+class PostViewModel(application: Application) : AndroidViewModel(application) {
+    private val repository: PostRepository = PostRepositoryFilesImpl(application)
     val data: LiveData<List<Post>> = repository.data
 
     private val _editablePost = MutableLiveData<Post?>(null)
@@ -24,7 +28,7 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
             repository.save(updatedPost)
             _editablePost.value = null
         } else {
-            // Создание нового поста с уникальным ID
+            // Создание нового поста
             val newPost = Post(
                 id = generateId(),
                 author = "Me",
@@ -40,7 +44,10 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
         val currentPosts = data.value ?: return
         val existingPost = currentPosts.find { it.id == postId }
         existingPost?.let { post ->
-            val updatedPost = post.copy(content = content)
+            val updatedPost = post.copy(
+                content = content,
+                video = if (content.contains("rutube", ignoreCase = true)) "https://rutube.ru/video/6550a91e7e523f9503bed47e4c46d0cb" else post.video
+            )
             repository.save(updatedPost)
         }
     }
@@ -59,7 +66,6 @@ class PostViewModel(private val repository: PostRepository) : ViewModel() {
 
     fun removeById(id: Long) {
         repository.removeById(id)
-        // Если удаляем пост, который редактируется, выходим из режима редактирования
         if (_editablePost.value?.id == id) {
             _editablePost.value = null
         }
