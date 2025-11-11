@@ -37,7 +37,7 @@
     <string name="like_count" translatable="false">0</string>
     <string name="share_count" translatable="false">0</string>
     <string name="views_count" translatable="false">0</string>
-    <string name="like">like</string>
+    <string name="like" translatable="false">like</string>
 
 
 </resources>
