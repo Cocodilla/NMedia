@@ -28,7 +28,6 @@ class PostFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
     }
 
     override fun onCreateView(
@@ -49,6 +48,9 @@ class PostFragment : Fragment() {
         post?.let { setupPost(it) } ?: run {
             findNavController().navigateUp()
         }
+
+        // Добавляем кнопку "Назад" в Toolbar
+        (requireActivity() as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
     }
 
     private fun setupPost(post: Post) {
@@ -102,19 +104,20 @@ class PostFragment : Fragment() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.menu_post_fragment, menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            android.R.id.home -> {
-                findNavController().navigateUp()
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
+    // Удаляем deprecated методы меню
+    // override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    //     inflater.inflate(R.menu.menu_post_fragment, menu)
+    // }
+    //
+    // override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    //     return when (item.itemId) {
+    //         android.R.id.home -> {
+    //             findNavController().navigateUp()
+    //             true
+    //         }
+    //         else -> super.onOptionsItemSelected(item)
+    //     }
+    // }
 
     private fun showMenu(post: Post, view: View) {
         PopupMenu(requireContext(), view).apply {
