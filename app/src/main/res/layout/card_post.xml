@@ -99,6 +99,7 @@
         app:iconPadding="4dp"
         style="@style/Widget.AppTheme.LikeButton"
         android:layout_width="wrap_content"
+        android:background="@android:color/transparent"
         android:layout_height="wrap_content"
         android:scaleType="centerCrop"
         android:checkable="true"
@@ -120,6 +121,7 @@
         android:layout_marginTop="4dp"
         android:checkable="true"
         android:contentDescription="@string/todo3"
+        android:background="@android:color/transparent"
         android:minWidth="0dp"
         android:scaleType="centerCrop"
         app:icon="@drawable/share"
@@ -139,6 +141,7 @@
         android:layout_marginEnd="16dp"
         app:icon="@drawable/baseline_more_vert_24"
         app:iconGravity="textEnd"
+        android:background="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -152,6 +155,7 @@
         android:layout_marginEnd="16dp"
         app:icon="@drawable/view"
         app:iconGravity="textStart"
+        android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="@+id/share"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/content"

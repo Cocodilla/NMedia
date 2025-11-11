@@ -44,8 +44,8 @@
                         android:id="@+id/menu"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
                         android:contentDescription="@string/post_menu"
+                        android:background="@android:color/transparent"
                         app:srcCompat="@drawable/outline_add_24" />
 
                 </LinearLayout>
@@ -85,7 +85,7 @@
                         android:id="@+id/playButton"
                         android:layout_width="48dp"
                         android:layout_height="48dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:background="@android:color/transparent"
                         android:contentDescription="@string/play_video"
                         app:srcCompat="@drawable/outline_auto_read_play_24"
                         app:tint="@color/black" />
@@ -118,8 +118,8 @@
                             android:id="@+id/like"
                             android:layout_width="48dp"
                             android:layout_height="48dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
                             android:contentDescription="@string/like"
+                            android:background="@android:color/transparent"
                             app:srcCompat="@drawable/like_selector"
                             app:tint="@color/grey_600" />
 
@@ -144,7 +144,7 @@
                             android:id="@+id/share"
                             android:layout_width="48dp"
                             android:layout_height="48dp"
-                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:background="@android:color/transparent"
                             android:contentDescription="@string/share"
                             app:srcCompat="@drawable/share"
                             app:tint="@color/grey_600" />
