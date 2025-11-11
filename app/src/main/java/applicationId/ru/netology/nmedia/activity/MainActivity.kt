@@ -1,133 +1,46 @@
 package applicationId.ru.netology.nmedia.activity
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
 import applicationId.ru.netology.nmedia.R
-import applicationId.ru.netology.nmedia.adapter.PostAdapter
 import applicationId.ru.netology.nmedia.databinding.ActivityMainBinding
-import applicationId.ru.netology.nmedia.dto.Post
-import applicationId.ru.netology.nmedia.viewModel.PostViewModel
-import applicationId.ru.netology.nmedia.viewModel.PostViewModelFactory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val viewModel: PostViewModel by viewModels {
-        PostViewModelFactory(application)
-    }
-    private lateinit var adapter: PostAdapter
-
-    private val newPostLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            result.data?.let { data ->
-                val content = data.getStringExtra(NewPostActivity.EXTRA_CONTENT)
-                val postId = data.getLongExtra(NewPostActivity.EXTRA_POST_ID, 0L)
-
-                if (!content.isNullOrEmpty()) {
-                    if (postId > 0L) {
-                        viewModel.edit(postId, content)
-                    } else {
-                        viewModel.save(content)
-                    }
-                }
-            }
-        }
-    }
+    private lateinit var appBarConfiguration: AppBarConfiguration
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        Log.d("MainActivity", "onCreate")
-        setupRecyclerView()
-        setupObservers()
-        setupClickListeners()
+        // Устанавливаем Toolbar как ActionBar
+        setSupportActionBar(binding.toolbar)
+
+        // Получаем NavHostFragment и затем NavController
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+
+        // Настройка навигации с ActionBar
+        appBarConfiguration = AppBarConfiguration(navController.graph)
+        setupActionBarWithNavController(navController, appBarConfiguration)
+
+        Log.d("MainActivity", "onCreate called")
     }
 
-    private fun setupRecyclerView() {
-        adapter = PostAdapter(object : PostAdapter.OnInteractionListener {
-            override fun onLike(post: Post) {
-                viewModel.like(post.id)
-            }
-
-            override fun onShare(post: Post) {
-                sharePost(post.content)
-            }
-
-            override fun onRemove(post: Post) {
-                viewModel.removeById(post.id)
-            }
-
-            override fun onEdit(post: Post) {
-                openEditPostScreen(post)
-            }
-
-            override fun onVideoPlay(post: Post) {
-                playVideo(post.video)
-            }
-        })
-
-        binding.list.apply {
-            layoutManager = LinearLayoutManager(this@MainActivity)
-            adapter = this@MainActivity.adapter
-        }
+    override fun onSupportNavigateUp(): Boolean {
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
 
-    private fun setupObservers() {
-        viewModel.data.observe(this) { posts ->
-            adapter.submitList(posts)
-        }
-    }
-
-    private fun setupClickListeners() {
-        binding.add.setOnClickListener {
-            openNewPostScreen()
-        }
-    }
-
-    private fun openNewPostScreen() {
-        val intent = Intent(this, NewPostActivity::class.java)
-        newPostLauncher.launch(intent)
-    }
-
-    private fun openEditPostScreen(post: Post) {
-        val intent = Intent(this, NewPostActivity::class.java).apply {
-            putExtra(NewPostActivity.EXTRA_POST, post)
-        }
-        newPostLauncher.launch(intent)
-    }
-
-    private fun sharePost(content: String) {
-        val intent = Intent().apply {
-            action = Intent.ACTION_SEND
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TEXT, content)
-        }
-        val chooser = Intent.createChooser(intent, getString(R.string.chooser_share_post))
-        startActivity(chooser)
-    }
-
-    private fun playVideo(videoUrl: String?) {
-        videoUrl?.let { url ->
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-            val chooser = Intent.createChooser(intent, getString(R.string.chooser_play_video))
-            if (intent.resolveActivity(packageManager) != null) {
-                startActivity(chooser)
-            } else {
-                Log.e("MainActivity", "No app found to handle video URL: $url")
-            }
-        }
-    }
-
-    // Методы жизненного цикла...
     override fun onStart() {
         super.onStart()
         Log.d("MainActivity", "onStart")

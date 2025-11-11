@@ -23,7 +23,21 @@
     <string name="editing_title" translatable="false">Редактирование поста</string>
     <string name="chooser_share_post">Share post</string>
     <string name="error_empty_content">Пусто</string>
-    <string name="chooser_play_video">Play video with</string>
+    <string name="save" translatable="false">Сохранить</string>
+    <string name="share" translatable="false">Поделиться</string>
+    <string name="add_new_post" translatable="false">Add new post</string>
+    <string name="chooser_play_video">Choose video player</string>
+    <string name="back" translatable="false">Back</string>
+    <string name="post_menu" translatable="false">Меню поста</string>
+    <string name="play_video" translatable="false">Воспроизвести видео</string>
+    <string name="author_name" translatable="false">Автор</string>
+    <string name="published_date" translatable="false">Дата публикации</string>
+    <string name="post_content" translatable="false">Содержимое поста</string>
+    <string name="video_content" translatable="false">Видео контент</string>
+    <string name="like_count" translatable="false">0</string>
+    <string name="share_count" translatable="false">0</string>
+    <string name="views_count" translatable="false">0</string>
+    <string name="like">like</string>
 
 
 </resources>

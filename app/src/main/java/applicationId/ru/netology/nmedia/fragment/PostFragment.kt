@@ -1,0 +1,164 @@
+package applicationId.ru.netology.nmedia.fragment
+
+import android.content.Intent
+import android.os.Bundle
+import android.view.*
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.net.toUri
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import applicationId.ru.netology.nmedia.R
+import applicationId.ru.netology.nmedia.databinding.FragmentPostBinding
+import applicationId.ru.netology.nmedia.dto.Post
+import applicationId.ru.netology.nmedia.viewModel.PostViewModel
+import applicationId.ru.netology.nmedia.viewModel.PostViewModelFactory
+
+class PostFragment : Fragment() {
+
+    private var _binding: FragmentPostBinding? = null
+    private val binding get() = _binding!!
+    private val viewModel: PostViewModel by viewModels(
+        ownerProducer = { requireActivity() },
+        factoryProducer = { PostViewModelFactory(requireActivity().application) }
+    )
+
+    private val args: PostFragmentArgs by navArgs()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentPostBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val postId = args.postId
+        val post = viewModel.data.value?.find { it.id == postId }
+
+        post?.let { setupPost(it) } ?: run {
+            findNavController().navigateUp()
+        }
+    }
+
+    private fun setupPost(post: Post) {
+        binding.apply {
+            author.text = post.author
+            published.text = post.published
+            content.text = post.content
+            likeCount.text = post.likes.toString()
+            shareCount.text = post.shares.toString()
+            viewsCount.text = post.views.toString()
+
+            like.setImageResource(
+                if (post.likedByMe) R.drawable.love_like_heart_icon_196980 else R.drawable.like_selector
+            )
+            like.setOnClickListener {
+                viewModel.like(post.id)
+            }
+
+            share.setOnClickListener {
+                sharePost(post.content)
+            }
+
+            menu.setOnClickListener {
+                showMenu(post, it)
+            }
+
+            if (post.video.isNullOrEmpty()) {
+                videoGroup.visibility = View.GONE
+            } else {
+                videoGroup.visibility = View.VISIBLE
+                playButton.setOnClickListener {
+                    playVideo(post.video)
+                }
+                videoGroup.setOnClickListener {
+                    playVideo(post.video)
+                }
+            }
+        }
+
+        viewModel.data.observe(viewLifecycleOwner) { posts ->
+            posts.find { it.id == post.id }?.let { updatedPost ->
+                binding.apply {
+                    likeCount.text = updatedPost.likes.toString()
+                    shareCount.text = updatedPost.shares.toString()
+                    viewsCount.text = updatedPost.views.toString()
+                    like.setImageResource(
+                        if (updatedPost.likedByMe) R.drawable.love_like_heart_icon_196980 else R.drawable.like_selector
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_post_fragment, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                findNavController().navigateUp()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showMenu(post: Post, view: View) {
+        PopupMenu(requireContext(), view).apply {
+            inflate(R.menu.menu_post)
+            setOnMenuItemClickListener { menuItem ->
+                when (menuItem.itemId) {
+                    R.id.edit -> {
+                        val action = PostFragmentDirections.actionPostFragmentToNewPostFragment(post)
+                        findNavController().navigate(action)
+                        true
+                    }
+                    R.id.remove -> {
+                        viewModel.removeById(post.id)
+                        findNavController().navigateUp()
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }.show()
+    }
+
+    private fun sharePost(content: String) {
+        val intent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, content)
+        }
+        val chooser = Intent.createChooser(intent, getString(R.string.chooser_share_post))
+        startActivity(chooser)
+    }
+
+    private fun playVideo(videoUrl: String?) {
+        videoUrl?.let { url ->
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+            val chooser = Intent.createChooser(intent, getString(R.string.chooser_play_video))
+            if (intent.resolveActivity(requireActivity().packageManager) != null) {
+                startActivity(chooser)
+            }
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}

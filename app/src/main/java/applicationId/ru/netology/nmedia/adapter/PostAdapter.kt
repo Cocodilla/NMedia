@@ -1,7 +1,5 @@
 package applicationId.ru.netology.nmedia.adapter
 
-import android.content.Intent
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,7 +10,6 @@ import androidx.recyclerview.widget.RecyclerView
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.databinding.CardPostBinding
 import applicationId.ru.netology.nmedia.dto.Post
-import ru.netology.nmedia.util.NumberFormatter
 
 class PostAdapter(
     private val interactionListener: OnInteractionListener
@@ -24,6 +21,7 @@ class PostAdapter(
         fun onRemove(post: Post)
         fun onEdit(post: Post)
         fun onVideoPlay(post: Post)
+        fun onPostClick(post: Post)
     }
 
     inner class ViewHolder(
@@ -33,6 +31,12 @@ class PostAdapter(
         private var currentPost: Post? = null
 
         init {
+            binding.root.setOnClickListener {
+                currentPost?.let { post ->
+                    interactionListener.onPostClick(post)
+                }
+            }
+
             binding.like.setOnClickListener {
                 currentPost?.let { post ->
                     interactionListener.onLike(post)
@@ -51,7 +55,6 @@ class PostAdapter(
                 }
             }
 
-            // Обработчик клика на видео блок
             binding.videoGroup.setOnClickListener {
                 currentPost?.let { post ->
                     if (!post.video.isNullOrEmpty()) {
@@ -60,7 +63,6 @@ class PostAdapter(
                 }
             }
 
-            // Обработчик клика на кнопку play
             binding.playButton.setOnClickListener {
                 currentPost?.let { post ->
                     if (!post.video.isNullOrEmpty()) {
@@ -76,36 +78,15 @@ class PostAdapter(
                 author.text = post.author
                 published.text = post.published
                 content.text = post.content
-                views.text = NumberFormatter.formatCount(post.views)
                 like.isChecked = post.likedByMe
-                like.text = NumberFormatter.formatCount(post.likes)
-                share.text = NumberFormatter.formatCount(post.shares)
+                like.text = post.likes.toString()
+                share.text = post.shares.toString()
+                views.text = post.views.toString()
 
-                // Показываем или скрываем блок с видео
                 if (post.video.isNullOrEmpty()) {
                     videoGroup.visibility = View.GONE
                 } else {
                     videoGroup.visibility = View.VISIBLE
-                }
-
-                // Обработчик нажатия на кнопку Play
-                playButton.setOnClickListener {
-                    playVideo(post.video)
-                }
-
-                // Также можно сделать кликабельным весь видео-блок
-                videoGroup.setOnClickListener {
-                    playVideo(post.video)
-                }
-            }
-        }
-
-        private fun playVideo(videoUrl: String?) {
-            videoUrl?.let { url ->
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                val chooser = Intent.createChooser(intent, "Play video with")
-                if (intent.resolveActivity(binding.root.context.packageManager) != null) {
-                    binding.root.context.startActivity(chooser)
                 }
             }
         }

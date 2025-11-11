@@ -14,23 +14,22 @@ class PostRepositorySharedPrefs(context: Context) : PostRepository {
         set(value) {
             field = value
             sync()
-            _data.value = value // Обновляем LiveData при изменении posts
+            _data.value = value
         }
     private var nextId = 1L
     private val _data = MutableLiveData(posts)
 
     init {
         prefs.getString(KEY_POSTS, null)?.let { json ->
-            val loadedPosts = gson.fromJson<List<Post>>(json, type)
+            val loadedPosts = Gson().fromJson<List<Post>>(json, type) // Исправлено: Gson()
             posts = loadedPosts
-            nextId = loadedPosts.maxOfOrNull { it.id }?.inc() ?: 1L
-
+            nextId = (loadedPosts.maxOfOrNull { it.id } ?: 0L) + 1L
         }
     }
 
     private fun sync() {
         prefs.edit {
-            putString(KEY_POSTS, gson.toJson(posts))
+            putString(KEY_POSTS, Gson().toJson(posts)) // Исправлено: Gson()
         }
     }
 
@@ -74,7 +73,6 @@ class PostRepositorySharedPrefs(context: Context) : PostRepository {
 
     companion object {
         private const val KEY_POSTS = "posts"
-        private val gson = Gson()
         private val type = object : TypeToken<List<Post>>() {}.type
     }
 }
