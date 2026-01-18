@@ -1,107 +1,126 @@
 package applicationId.ru.netology.nmedia.repository
 
-import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import applicationId.ru.netology.nmedia.dto.Post
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import java.io.IOException
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import kotlin.concurrent.thread
 
-class PostRepositoryFilesImpl(private val context: Context) : PostRepository {
-    private var posts = emptyList<Post>()
+class PostRepositoryImpl : PostRepository {
+
+    private val client = OkHttpClient()
+    private val gson = Gson()
+
+    private var posts: List<Post> = emptyList()
         set(value) {
             field = value
-            sync()
-            _data.value = value
+            _data.postValue(value)
         }
-    private var nextId = 1L
-    private val _data = MutableLiveData(posts)
 
-    init {
-        loadFromFile()
-    }
-
-    private fun loadFromFile() {
-        val file = context.filesDir.resolve(FILENAME)
-        if (file.exists()) {
-            try {
-                context.openFileInput(FILENAME).bufferedReader().use { reader ->
-                    val json = reader.readText()
-                    if (json.isNotBlank()) {
-                        val loadedPosts = Gson().fromJson<List<Post>>(json, type)
-                        posts = loadedPosts
-                        nextId = (loadedPosts.maxOfOrNull { it.id } ?: 0L) + 1L
-                    } else {
-                        // Файл существует, но пустой
-                        posts = emptyList()
-                        nextId = 1L
-                    }
-                }
-            } catch (e: IOException) {
-                // Если ошибка чтения, инициализируем пустым списком
-                posts = emptyList()
-                nextId = 1L
-            }
-        } else {
-            // Файл не существует - первый запуск
-            posts = emptyList()
-            nextId = 1L
-        }
-    }
-
-    private fun sync() {
-        try {
-            context.openFileOutput(FILENAME, Context.MODE_PRIVATE).bufferedWriter().use { writer ->
-                writer.write(Gson().toJson(posts))
-            }
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
-
+    private val _data = MutableLiveData<List<Post>>(emptyList())
     override val data: LiveData<List<Post>>
         get() = _data
 
+    init {
+        refresh() // сразу грузим с сервера
+    }
+     // Загрузка всех постов с сервера.
+
+    fun refresh() {
+        thread {
+            try {
+                val request = Request.Builder()
+                    .url("$BASE_URL/api/posts")
+                    .get()
+                    .build()
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw RuntimeException("Error: ${response.code}")
+                    }
+
+                    val body = response.body?.string()
+                        ?: throw RuntimeException("Empty body")
+
+                    val type = object : TypeToken<List<Post>>() {}.type
+                    val loaded = gson.fromJson<List<Post>>(body, type)
+
+                    posts = loaded
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+     // Сервер возвращает JSON обновлённого поста -> заменяем пост в списке.
+
     override fun like(id: Long) {
-        posts = posts.map { post ->
-            if (post.id == id) {
-                post.copy(
-                    likedByMe = !post.likedByMe,
-                    likes = if (post.likedByMe) post.likes - 1 else post.likes + 1
-                )
-            } else {
-                post
+        val current = _data.value.orEmpty()
+        val target = current.find { it.id == id } ?: return
+
+        thread {
+            try {
+                val request = if (target.likedByMe) {
+                    // снять лайк
+                    Request.Builder()
+                        .url("$BASE_URL/api/posts/$id/likes")
+                        .delete()
+                        .build()
+                } else {
+                    // поставить лайк
+                    Request.Builder()
+                        .url("$BASE_URL/api/posts/$id/likes")
+                        .post(ByteArray(0).toRequestBody())
+                        .build()
+                }
+
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) {
+                        throw RuntimeException("Error: ${response.code}")
+                    }
+
+                    val body = response.body?.string()
+                        ?: throw RuntimeException("Empty body")
+
+                    val updated = gson.fromJson(body, Post::class.java)
+
+                    // обновляем список: заменяем один элемент (актуальные лайки/likedByMe)
+                    posts = _data.value.orEmpty().map { p ->
+                        if (p.id == updated.id) updated else p
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
 
     override fun share(id: Long) {
-        posts = posts.map { post ->
-            if (post.id == id) {
-                post.copy(shares = post.shares + 1)
-            } else {
-                post
-            }
+        posts = _data.value.orEmpty().map { post ->
+            if (post.id == id) post.copy(shares = post.shares + 1) else post
         }
     }
 
     override fun removeById(id: Long) {
-        posts = posts.filter { it.id != id }
+        posts = _data.value.orEmpty().filter { it.id != id }
     }
 
     override fun save(post: Post) {
-        posts = if (posts.any { it.id == post.id }) {
-            // Редактирование существующего поста
-            posts.map { if (it.id == post.id) post else it }
+        val current = _data.value.orEmpty()
+        posts = if (current.any { it.id == post.id }) {
+            current.map { if (it.id == post.id) post else it }
         } else {
-            // Создание нового поста
-            listOf(post.copy(id = nextId++)) + posts
+            listOf(post) + current
         }
     }
 
     companion object {
-        private const val FILENAME = "posts.json"
-        private val type = object : TypeToken<List<Post>>() {}.type
+        private const val BASE_URL = "http://10.0.2.2:9999"
     }
 }

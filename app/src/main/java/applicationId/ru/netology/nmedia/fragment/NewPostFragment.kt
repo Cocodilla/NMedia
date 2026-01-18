@@ -11,14 +11,14 @@ import androidx.navigation.fragment.navArgs
 import applicationId.ru.netology.nmedia.databinding.FragmentNewPostBinding
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
-import applicationId.ru.netology.nmedia.viewModel.PostViewModelFactory
+
 
 class NewPostFragment : Fragment() {
 
     private var _binding: FragmentNewPostBinding? = null
     private val binding get() = _binding!!
     private val viewModel: PostViewModel by lazy {
-        ViewModelProvider(requireActivity(), PostViewModelFactory(requireActivity().application))[PostViewModel::class.java]
+        ViewModelProvider(requireActivity())[PostViewModel::class.java]
     }
 
     private val args: NewPostFragmentArgs by navArgs()

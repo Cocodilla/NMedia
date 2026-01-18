@@ -2,27 +2,28 @@ package applicationId.ru.netology.nmedia.fragment
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.databinding.FragmentPostBinding
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
-import applicationId.ru.netology.nmedia.viewModel.PostViewModelFactory
 
 class PostFragment : Fragment() {
 
     private var _binding: FragmentPostBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: PostViewModel by viewModels(
-        ownerProducer = { requireActivity() },
-        factoryProducer = { PostViewModelFactory(requireActivity().application) }
-    )
+
+    private val viewModel: PostViewModel by lazy {
+        ViewModelProvider(requireActivity())[PostViewModel::class.java]
+    }
 
     private val args: PostFragmentArgs by navArgs()
 
@@ -49,8 +50,10 @@ class PostFragment : Fragment() {
             findNavController().navigateUp()
         }
 
-        // Добавляем кнопку "Назад" в Toolbar
-        (requireActivity() as? androidx.appcompat.app.AppCompatActivity)?.supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        // Кнопка "Назад" в Toolbar (если ActionBar есть)
+        (requireActivity() as? androidx.appcompat.app.AppCompatActivity)
+            ?.supportActionBar
+            ?.setDisplayHomeAsUpEnabled(true)
     }
 
     private fun setupPost(post: Post) {
@@ -81,12 +84,8 @@ class PostFragment : Fragment() {
                 videoGroup.visibility = View.GONE
             } else {
                 videoGroup.visibility = View.VISIBLE
-                playButton.setOnClickListener {
-                    playVideo(post.video)
-                }
-                videoGroup.setOnClickListener {
-                    playVideo(post.video)
-                }
+                playButton.setOnClickListener { playVideo(post.video) }
+                videoGroup.setOnClickListener { playVideo(post.video) }
             }
         }
 
@@ -104,21 +103,6 @@ class PostFragment : Fragment() {
         }
     }
 
-    // Удаляем deprecated методы меню
-    // override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    //     inflater.inflate(R.menu.menu_post_fragment, menu)
-    // }
-    //
-    // override fun onOptionsItemSelected(item: MenuItem): Boolean {
-    //     return when (item.itemId) {
-    //         android.R.id.home -> {
-    //             findNavController().navigateUp()
-    //             true
-    //         }
-    //         else -> super.onOptionsItemSelected(item)
-    //     }
-    // }
-
     private fun showMenu(post: Post, view: View) {
         PopupMenu(requireContext(), view).apply {
             inflate(R.menu.menu_post)
@@ -129,11 +113,13 @@ class PostFragment : Fragment() {
                         findNavController().navigate(action)
                         true
                     }
+
                     R.id.remove -> {
                         viewModel.removeById(post.id)
                         findNavController().navigateUp()
                         true
                     }
+
                     else -> false
                 }
             }

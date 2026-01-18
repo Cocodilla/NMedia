@@ -1,59 +1,23 @@
 package applicationId.ru.netology.nmedia.viewModel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.repository.PostRepository
-import applicationId.ru.netology.nmedia.repository.PostRepositoryFilesImpl
+import applicationId.ru.netology.nmedia.repository.PostRepositoryImpl
 
+class PostViewModel : ViewModel() {
 
-class PostViewModel(application: Application) : AndroidViewModel(application) {
-    private val repository: PostRepository = PostRepositoryFilesImpl(application)
+    private val repository: PostRepository = PostRepositoryImpl()
+
     val data: LiveData<List<Post>> = repository.data
 
     private val _editablePost = MutableLiveData<Post?>(null)
     val editablePost: LiveData<Post?> = _editablePost
 
-    fun setPostForEditing(post: Post) {
-        _editablePost.value = post
-    }
-
-    fun save(content: String) {
-        val editablePost = _editablePost.value
-        if (editablePost != null) {
-            // Редактирование существующего поста
-            val updatedPost = editablePost.copy(content = content)
-            repository.save(updatedPost)
-            _editablePost.value = null
-        } else {
-            // Создание нового поста
-            val newPost = Post(
-                id = generateId(),
-                author = "Me",
-                content = content,
-                published = "Now",
-                video = if (content.contains("rutube", ignoreCase = true)) "https://rutube.ru/video/6550a91e7e523f9503bed47e4c46d0cb" else null
-            )
-            repository.save(newPost)
-        }
-    }
-
-    fun edit(postId: Long, content: String) {
-        val currentPosts = data.value ?: return
-        val existingPost = currentPosts.find { it.id == postId }
-        existingPost?.let { post ->
-            val updatedPost = post.copy(
-                content = content,
-                video = if (content.contains("rutube", ignoreCase = true)) "https://rutube.ru/video/6550a91e7e523f9503bed47e4c46d0cb" else post.video
-            )
-            repository.save(updatedPost)
-        }
-    }
-
-    fun cancelEditing() {
-        _editablePost.value = null
+    fun loadPosts() {
+        (repository as? PostRepositoryImpl)?.refresh()
     }
 
     fun like(id: Long) {
@@ -71,7 +35,31 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun generateId(): Long {
-        return System.currentTimeMillis()
+    fun save(content: String) {
+        val post = Post(
+            id = System.currentTimeMillis(),
+            author = "Me",
+            content = content,
+            published = "Now",
+            likedByMe = false,
+            likes = 0,
+            shares = 0,
+            views = 0,
+            video = null
+        )
+        repository.save(post)
+    }
+    fun edit(id: Long, content: String) {
+        val current = data.value.orEmpty()
+        val oldPost = current.find { it.id == id } ?: return
+        repository.save(oldPost.copy(content = content))
+    }
+
+    fun setPostForEditing(post: Post) {
+        _editablePost.value = post
+    }
+
+    fun cancelEditing() {
+        _editablePost.value = null
     }
 }

@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
@@ -15,16 +16,15 @@ import applicationId.ru.netology.nmedia.adapter.PostAdapter
 import applicationId.ru.netology.nmedia.databinding.FragmentFeedBinding
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
-import applicationId.ru.netology.nmedia.viewModel.PostViewModelFactory
-import androidx.core.net.toUri
 
 class FeedFragment : Fragment() {
 
     private var _binding: FragmentFeedBinding? = null
     private val binding get() = _binding!!
+
+    // ✅ Вот так правильно получаем ViewModel без Factory
     private val viewModel: PostViewModel by lazy {
-        ViewModelProvider(requireActivity(), PostViewModelFactory(requireActivity().application))
-            .get(PostViewModel::class.java)
+        ViewModelProvider(requireActivity())[PostViewModel::class.java]
     }
 
     private lateinit var adapter: PostAdapter
@@ -42,9 +42,11 @@ class FeedFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         Log.d("FeedFragment", "onViewCreated")
+
         setupRecyclerView()
         setupObservers()
         setupClickListeners()
+        setupSwipeRefresh()
     }
 
     private fun setupRecyclerView() {
@@ -83,12 +85,20 @@ class FeedFragment : Fragment() {
     private fun setupObservers() {
         viewModel.data.observe(viewLifecycleOwner) { posts ->
             adapter.submitList(posts)
+            binding.swipeRefresh.isRefreshing = false
         }
     }
 
     private fun setupClickListeners() {
         binding.add.setOnClickListener {
             openNewPostScreen()
+        }
+    }
+
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.setOnRefreshListener {
+            binding.swipeRefresh.isRefreshing = true
+            viewModel.loadPosts()
         }
     }
 

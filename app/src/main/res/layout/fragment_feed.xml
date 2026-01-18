@@ -7,13 +7,20 @@
     android:layout_height="match_parent"
     tools:context=".fragment.FeedFragment">
 
-    <!-- RecyclerView для отображения списка постов -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/list"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp"
-        tools:listitem="@layout/card_post" />
+        android:layout_height="match_parent">
+
+        <!-- RecyclerView для отображения списка постов -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="8dp"
+            tools:listitem="@layout/card_post" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <!-- Floating Action Button для добавления нового поста -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
