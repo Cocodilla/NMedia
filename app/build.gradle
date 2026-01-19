@@ -32,6 +32,8 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+        // ✅ важно для java.time на minSdk < 26
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -52,6 +54,8 @@ dependencies {
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.navigation.fragment.ktx
     implementation libs.androidx.navigation.ui.ktx
+    // ✅ для java.time (DateTimeFormatter и т.п.) на API 24-25
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.6.2"
