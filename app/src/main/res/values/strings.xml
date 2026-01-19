@@ -38,6 +38,11 @@
     <string name="share_count" translatable="false">0</string>
     <string name="views_count" translatable="false">0</string>
     <string name="like" translatable="false">like</string>
-
+    <string name="loading" translatable="false">Загружаем данные…</string>
+    <string name="empty_title" translatable="false">Ничего не найдено</string>
+    <string name="empty_message" translatable="false">Здесь пока нет постов</string>
+    <string name="error_title" translatable="false">Произошла ошибка</string>
+    <string name="error_message" translatable="false">Не удалось загрузить данные. Проверьте подключение и попробуйте ещё раз.</string>
+    <string name="retry" translatable="false">Повторить</string>
 
 </resources>

@@ -3,6 +3,7 @@ agp = "8.4.0"
 kotlin = "1.9.22"
 navigation = "2.9.6"
 material = "1.11.0"
+materialVersion = "1.13.0"
 
 [libraries]
 # Navigation
@@ -28,6 +29,7 @@ androidx-coordinatorlayout = { module = "androidx.coordinatorlayout:coordinatorl
 junit = { module = "junit:junit", version = "4.13.2" }
 androidx-junit = { module = "androidx.test.ext:junit", version = "1.1.5" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version = "3.5.1" }
+google-material = { group = "com.google.android.material", name = "material", version.ref = "materialVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
