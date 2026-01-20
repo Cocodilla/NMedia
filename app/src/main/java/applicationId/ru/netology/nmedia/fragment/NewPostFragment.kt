@@ -12,11 +12,11 @@ import applicationId.ru.netology.nmedia.databinding.FragmentNewPostBinding
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
 
-
 class NewPostFragment : Fragment() {
 
     private var _binding: FragmentNewPostBinding? = null
     private val binding get() = _binding!!
+
     private val viewModel: PostViewModel by lazy {
         ViewModelProvider(requireActivity())[PostViewModel::class.java]
     }
@@ -36,49 +36,30 @@ class NewPostFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Получаем пост из аргументов (может быть null)
-        editingPost = args.post
+        editingPost = args.post // nullable
 
-        setupPostData()
-        setupClickListeners()
-    }
-
-    private fun setupPostData() {
-        val post = editingPost
-        if (post != null) {
-            // Режим редактирования
+        editingPost?.let { post ->
             binding.editingTitle.visibility = View.VISIBLE
             binding.buttonCancel.visibility = View.VISIBLE
             binding.content.setText(post.content)
             binding.content.setSelection(binding.content.text.length)
-        } else {
-            // Режим создания нового поста
-            binding.editingTitle.visibility = View.GONE
-            binding.buttonCancel.visibility = View.GONE
         }
-    }
 
-    private fun setupClickListeners() {
         binding.buttonCancel.setOnClickListener {
             findNavController().navigateUp()
         }
 
         binding.save.setOnClickListener {
-            saveOrUpdatePost()
-        }
-    }
+            val content = binding.content.text.toString().trim()
+            if (content.isEmpty()) return@setOnClickListener
 
-    private fun saveOrUpdatePost() {
-        val content = binding.content.text.toString().trim()
-        if (content.isNotEmpty()) {
             val post = editingPost
-            if (post != null) {
-                // Редактирование существующего поста
-                viewModel.edit(post.id, content)
-            } else {
-                // Создание нового поста
+            if (post == null) {
                 viewModel.save(content)
+            } else {
+                viewModel.edit(post.id, content) // ✅ редактирование через сервер
             }
+
             findNavController().navigateUp()
         }
     }

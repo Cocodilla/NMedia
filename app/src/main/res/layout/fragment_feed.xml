@@ -7,18 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".fragment.FeedFragment">
 
-    <!-- Верхний индикатор (удобен при подгрузке/обновлении) -->
-    <ProgressBar
-        android:id="@+id/topProgress"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:indeterminate="true"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
-    <!-- RecyclerView + swipe-to-refresh -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
@@ -33,74 +21,6 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <!-- Прогресс-бар для "первой загрузки" (поверх списка) -->
-    <ProgressBar
-        android:id="@+id/progress"
-        style="?android:attr/progressBarStyleLarge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
-    <!-- Пустое/ошибка состояние (поверх контента) -->
-    <LinearLayout
-        android:id="@+id/stateContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="24dp"
-        android:visibility="gone"
-        tools:visibility="visible">
-
-        <ImageView
-            android:id="@+id/stateIcon"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
-            android:alpha="0.9"
-            android:contentDescription="@null"
-            tools:src="@drawable/ic_launcher_foreground" />
-
-        <TextView
-            android:id="@+id/stateTitle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
-            tools:text="@string/empty_title" />
-
-        <TextView
-            android:id="@+id/stateMessage"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:gravity="center"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
-            tools:text="@string/empty_message" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/retry"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/retry"
-            android:visibility="gone"
-            tools:visibility="visible" />
-    </LinearLayout>
-
-    <!-- Индикатор подгрузки следующей страницы снизу -->
-    <ProgressBar
-        android:id="@+id/pagingProgress"
-        style="?android:attr/progressBarStyleSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginBottom="84dp"
-        android:visibility="gone"
-        tools:visibility="visible" />
-
-    <!-- Floating Action Button для добавления нового поста -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add"
         android:layout_width="wrap_content"

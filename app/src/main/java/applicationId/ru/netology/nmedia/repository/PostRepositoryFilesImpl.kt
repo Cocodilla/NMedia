@@ -1,164 +1,199 @@
 package applicationId.ru.netology.nmedia.repository
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.dto.PostApiModel
 import applicationId.ru.netology.nmedia.dto.toUi
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import kotlin.concurrent.thread
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 
 class PostRepositoryImpl : PostRepository {
 
-    private val client = OkHttpClient()
     private val gson = Gson()
 
-    private val _data = MutableLiveData<List<Post>>(emptyList())
-    override val data: LiveData<List<Post>> = _data
-    private val publishedById = mutableMapOf<Long, Long>()
+    // --- Dispatcher: ЯВНО по заданию ---
+    private val dispatcher = Dispatcher().apply {
+        maxRequests = 64          // общий максимум
+        maxRequestsPerHost = 5    // максимум на один хост
+    }
+
+    private val client = OkHttpClient.Builder()
+        .dispatcher(dispatcher)
+        .connectTimeout(10, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
+        .writeTimeout(10, TimeUnit.SECONDS)
+        .build()
 
     init {
-        refresh()
+        // 🔍 лог — чтобы было видно, что Dispatcher настроен
+        println(
+            "OkHttp Dispatcher configured: " +
+                    "maxRequests=${dispatcher.maxRequests}, " +
+                    "maxRequestsPerHost=${dispatcher.maxRequestsPerHost}"
+        )
     }
 
-    fun refresh() {
-        thread {
-            try {
-                val request = Request.Builder()
-                    .url("$BASE_URL/api/posts")
-                    .get()
-                    .build()
+    override fun getAll(callback: PostRepository.Callback<List<Post>>) {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/posts")
+            .get()
+            .build()
 
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) throw RuntimeException("Error: ${response.code}")
-
-                    val body = response.body?.string() ?: throw RuntimeException("Empty body")
-                    val type = object : TypeToken<List<PostApiModel>>() {}.type
-                    val apiPosts: List<PostApiModel> = gson.fromJson(body, type)
-                    publishedById.clear()
-                    apiPosts.forEach { publishedById[it.id] = it.published }
-
-                    _data.postValue(apiPosts.map { it.toUi() })
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback.onError(e)
             }
-        }
-    }
 
-    override fun like(id: Long) {
-        val current = _data.value.orEmpty()
-        val target = current.find { it.id == id } ?: return
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    try {
+                        if (!it.isSuccessful) {
+                            throw RuntimeException("Error: ${it.code}")
+                        }
 
-        thread {
-            try {
-                val request = if (target.likedByMe) {
-                    Request.Builder()
-                        .url("$BASE_URL/api/posts/$id/likes")
-                        .delete()
-                        .build()
-                } else {
-                    Request.Builder()
-                        .url("$BASE_URL/api/posts/$id/likes")
-                        .post(ByteArray(0).toRequestBody())
-                        .build()
-                }
+                        val body = it.body?.string()
+                            ?: throw RuntimeException("Empty body")
 
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) throw RuntimeException("Error: ${response.code}")
+                        val type = object : TypeToken<List<PostApiModel>>() {}.type
+                        val apiPosts: List<PostApiModel> = gson.fromJson(body, type)
 
-                    val body = response.body?.string() ?: throw RuntimeException("Empty body")
-                    val updatedApi = gson.fromJson(body, PostApiModel::class.java)
-
-                    //  сервер вернул обновлённый пост — обновляем published map
-                    publishedById[updatedApi.id] = updatedApi.published
-
-                    val updatedUi = updatedApi.toUi()
-                    val updatedList = _data.value.orEmpty().map { p ->
-                        if (p.id == updatedUi.id) updatedUi else p
+                        callback.onSuccess(apiPosts.map { p -> p.toUi() })
+                    } catch (e: Exception) {
+                        callback.onError(e)
                     }
-                    _data.postValue(updatedList)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
-        }
+        })
     }
 
-    override fun save(post: Post) {
-        thread {
-            try {
-                val publishedMillis = if (post.id == 0L) {
-                    //  новый пост: текущее время
-                    System.currentTimeMillis()
-                } else {
-                    //  редактирование: сохраняем исходный published, если он известен
-                    publishedById[post.id] ?: System.currentTimeMillis()
-                }
+    override fun likeById(id: Long, callback: PostRepository.Callback<Post>) {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/posts/$id/likes")
+            .post(ByteArray(0).toRequestBody())
+            .build()
 
-                val apiPost = PostApiModel(
-                    id = if (post.id == 0L) 0L else post.id, // ✅ новый: 0
-                    author = post.author,
-                    content = post.content,
-                    published = publishedMillis,
-                    likedByMe = post.likedByMe,
-                    likes = post.likes,
-                    shares = post.shares,
-                    views = post.views,
-                    video = post.video
-                )
+        client.newCall(request).enqueue(postCallback(callback))
+    }
 
-                val json = gson.toJson(apiPost)
-                val body = json.toRequestBody("application/json; charset=utf-8".toMediaType())
+    override fun unlikeById(id: Long, callback: PostRepository.Callback<Post>) {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/posts/$id/likes")
+            .delete()
+            .build()
 
-                val request = Request.Builder()
-                    .url("$BASE_URL/api/posts")
-                    .post(body)
-                    .build()
+        client.newCall(request).enqueue(postCallback(callback))
+    }
 
-                client.newCall(request).execute().use { response ->
-                    if (!response.isSuccessful) throw RuntimeException("Error: ${response.code}")
+    override fun save(content: String, callback: PostRepository.Callback<Post>) {
+        // Новый пост: id = 0, published = Long (как требует сервер)
+        val api = PostApiModel(
+            id = 0L,
+            author = "Me",
+            content = content,
+            published = System.currentTimeMillis(),
+            likedByMe = false,
+            likes = 0,
+            shares = 0,
+            views = 0,
+            video = if (content.contains("rutube", ignoreCase = true))
+                "https://rutube.ru/video/6550a91e7e523f9503bed47e4c46d0cb"
+            else null
+        )
 
-                    val responseBody = response.body?.string() ?: throw RuntimeException("Empty body")
-                    val savedApi = gson.fromJson(responseBody, PostApiModel::class.java)
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = gson.toJson(api).toRequestBody(mediaType)
 
-                    // обновляем published map по ответу сервера
-                    publishedById[savedApi.id] = savedApi.published
+        val request = Request.Builder()
+            .url("$BASE_URL/api/posts")
+            .post(body)
+            .build()
 
-                    val savedUi = savedApi.toUi()
-                    val current = _data.value.orEmpty()
-                    val updated = if (current.any { it.id == savedUi.id }) {
-                        current.map { if (it.id == savedUi.id) savedUi else it }
-                    } else {
-                        listOf(savedUi) + current
+        client.newCall(request).enqueue(postCallback(callback))
+    }
+
+    override fun editById(id: Long, content: String, callback: PostRepository.Callback<Post>) {
+        // Редактирование: id != 0
+        val api = PostApiModel(
+            id = id,
+            author = "Me",
+            content = content,
+            published = System.currentTimeMillis(),
+            likedByMe = false,
+            likes = 0,
+            shares = 0,
+            views = 0,
+            video = if (content.contains("rutube", ignoreCase = true))
+                "https://rutube.ru/video/6550a91e7e523f9503bed47e4c46d0cb"
+            else null
+        )
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = gson.toJson(api).toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url("$BASE_URL/api/posts")
+            .post(body)
+            .build()
+
+        client.newCall(request).enqueue(postCallback(callback))
+    }
+
+    override fun removeById(id: Long, callback: PostRepository.Callback<Unit>) {
+        val request = Request.Builder()
+            .url("$BASE_URL/api/posts/$id")
+            .delete()
+            .build()
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback.onError(e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    try {
+                        if (!it.isSuccessful) {
+                            throw RuntimeException("Error: ${it.code}")
+                        }
+                        callback.onSuccess(Unit)
+                    } catch (e: Exception) {
+                        callback.onError(e)
                     }
-
-                    _data.postValue(updated)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            }
+        })
+    }
+
+    private fun postCallback(callback: PostRepository.Callback<Post>): Callback =
+        object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                callback.onError(e)
+            }
+
+            override fun onResponse(call: Call, response: Response) {
+                response.use {
+                    try {
+                        if (!it.isSuccessful) {
+                            throw RuntimeException("Error: ${it.code}")
+                        }
+
+                        val body = it.body?.string()
+                            ?: throw RuntimeException("Empty body")
+
+                        val api = gson.fromJson(body, PostApiModel::class.java)
+                        callback.onSuccess(api.toUi())
+                    } catch (e: Exception) {
+                        callback.onError(e)
+                    }
+                }
             }
         }
-    }
-
-    override fun removeById(id: Long) {
-        publishedById.remove(id)
-        _data.value = _data.value.orEmpty().filter { it.id != id }
-    }
-
-    override fun share(id: Long) {
-        _data.value = _data.value.orEmpty().map { p ->
-            if (p.id == id) p.copy(shares = p.shares + 1) else p
-        }
-    }
 
     companion object {
-        private const val BASE_URL = "http://127.0.0.1:9999"
-        private val JSON = "application/json".toMediaType()
+        private const val BASE_URL = "http://10.0.2.2:9999"
     }
 }
