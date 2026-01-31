@@ -9,19 +9,26 @@ import java.util.Locale
 data class PostApiModel(
     val id: Long,
     val author: String,
+    val authorAvatar: String? = null,
     val content: String,
     val published: Long,
     val likedByMe: Boolean = false,
     val likes: Int = 0,
     val shares: Int = 0,
     val views: Int = 0,
-    val video: String? = null
+    val video: String? = null,
+    val attachment: AttachmentApiModel? = null
+)
+
+data class AttachmentApiModel(
+    val url: String,
+    val description: String? = null,
+    val type: String
 )
 
 /* ---------- форматирование даты для UI ---------- */
 
 private val localeRu = Locale("ru")
-
 private val timeFmt = DateTimeFormatter.ofPattern("HH:mm", localeRu)
 private val dayMonthFmt = DateTimeFormatter.ofPattern("dd MMM", localeRu)
 private val fullFmt = DateTimeFormatter.ofPattern("dd MMM yyyy", localeRu)
@@ -47,11 +54,19 @@ private fun humanDate(millis: Long): String {
 fun PostApiModel.toUi(): Post = Post(
     id = id,
     author = author,
+    authorAvatar = authorAvatar,
     content = content,
     published = humanDate(published),
     likedByMe = likedByMe,
     likes = likes,
     shares = shares,
     views = views,
-    video = video
+    video = video,
+    attachment = attachment?.let {
+        Attachment(
+            url = it.url,
+            description = it.description,
+            type = AttachmentType.IMAGE
+        )
+    }
 )

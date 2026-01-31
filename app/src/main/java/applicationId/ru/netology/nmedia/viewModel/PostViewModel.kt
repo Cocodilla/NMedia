@@ -1,5 +1,6 @@
-package applicationId.ru.netology.nmedia.viewModel
+ package applicationId.ru.netology.nmedia.viewModel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -25,7 +26,7 @@ class PostViewModel : ViewModel() {
             }
 
             override fun onError(e: Exception) {
-                e.printStackTrace()
+                Log.e("PostViewModel", "loadPosts error", e)
             }
         })
     }
@@ -40,7 +41,7 @@ class PostViewModel : ViewModel() {
             }
 
             override fun onError(e: Exception) {
-                e.printStackTrace()
+                Log.e("PostViewModel", "like error", e)
             }
         }
 
@@ -51,11 +52,14 @@ class PostViewModel : ViewModel() {
     fun removeById(id: Long) {
         repository.removeById(id, object : PostRepository.Callback<Unit> {
             override fun onSuccess(value: Unit) {
+                // можно локально убрать сразу
                 _data.postValue(_data.value.orEmpty().filter { it.id != id })
+                // и добрать актуальное с сервера (на случай сортировки/логики сервера)
+                loadPosts()
             }
 
             override fun onError(e: Exception) {
-                e.printStackTrace()
+                Log.e("PostViewModel", "remove error", e)
             }
         })
     }
@@ -63,11 +67,12 @@ class PostViewModel : ViewModel() {
     fun save(content: String) {
         repository.save(content, object : PostRepository.Callback<Post> {
             override fun onSuccess(value: Post) {
-                _data.postValue(listOf(value) + _data.value.orEmpty())
+                // сервер может менять поля → лучше перезагрузить ленту
+                loadPosts()
             }
 
             override fun onError(e: Exception) {
-                e.printStackTrace()
+                Log.e("PostViewModel", "save error", e)
             }
         })
     }
@@ -75,12 +80,12 @@ class PostViewModel : ViewModel() {
     fun edit(id: Long, content: String) {
         repository.editById(id, content, object : PostRepository.Callback<Post> {
             override fun onSuccess(value: Post) {
-                val updated = _data.value.orEmpty().map { if (it.id == value.id) value else it }
-                _data.postValue(updated)
+                // сервер может менять поля → лучше перезагрузить ленту
+                loadPosts()
             }
 
             override fun onError(e: Exception) {
-                e.printStackTrace()
+                Log.e("PostViewModel", "edit error", e)
             }
         })
     }

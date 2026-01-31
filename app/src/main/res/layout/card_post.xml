@@ -7,18 +7,16 @@
     android:layout_height="wrap_content"
     tools:context=".activity.MainActivity">
 
-
     <ImageView
         android:id="@+id/avatar"
         android:layout_width="60dp"
         android:layout_height="60dp"
         android:layout_margin="16dp"
         android:contentDescription="@string/todo"
-        app:layout_constraintVertical_chainStyle="packed"
+        android:scaleType="centerCrop"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/ic_launcher_round"
-        />
+        app:srcCompat="@mipmap/ic_launcher_round" />
 
     <TextView
         android:id="@+id/author"
@@ -27,31 +25,30 @@
         android:layout_marginHorizontal="16dp"
         android:ellipsize="end"
         android:maxLines="1"
-        tools:text="@string/author"
-        app:layout_constraintBottom_toTopOf="@+id/published"
         app:layout_constraintEnd_toStartOf="@+id/menu"
         app:layout_constraintStart_toEndOf="@+id/avatar"
-        app:layout_constraintTop_toTopOf="@+id/avatar" />
+        app:layout_constraintTop_toTopOf="@+id/avatar"
+        tools:text="@string/author" />
 
     <TextView
         android:id="@+id/published"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/published"
         android:layout_marginHorizontal="16dp"
+        android:text="@string/published"
+        app:layout_constraintBottom_toBottomOf="@+id/avatar"
         app:layout_constraintStart_toEndOf="@+id/avatar"
-        app:layout_constraintTop_toTopOf="@+id/author"
-        app:layout_constraintBottom_toBottomOf="@+id/avatar"/>
+        app:layout_constraintTop_toBottomOf="@+id/author" />
 
     <TextView
         android:id="@+id/content"
-        android:layout_margin="16dp"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_margin="16dp"
         android:text="@string/text"
-        app:layout_constraintTop_toBottomOf="@+id/avatar"
-        app:layout_constraintEnd_toStartOf="@+id/menu"
-        app:layout_constraintStart_toStartOf="@+id/avatar"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/avatar" />
 
     <!-- Блок для видео -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -68,22 +65,21 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/content">
 
-        <!-- VideoView для воспроизведения -->
         <VideoView
             android:id="@+id/videoPlayer"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- Кнопка Play поверх VideoView -->
         <ImageButton
             android:id="@+id/playButton"
             android:layout_width="64dp"
             android:layout_height="64dp"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/playButton"
             android:scaleType="center"
             android:src="@drawable/outline_arrow_right_24"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -93,23 +89,44 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <!-- Attachment IMAGE  -->
+    <LinearLayout
+        android:id="@+id/attachmentGroup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/videoGroup">
+
+        <ImageView
+            android:id="@+id/attachmentImage"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:contentDescription="@string/attachment_image"
+            android:scaleType="centerCrop" />
+
+    </LinearLayout>
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/like"
-        android:minWidth="0dp"
-        app:iconPadding="4dp"
         style="@style/Widget.AppTheme.LikeButton"
         android:layout_width="wrap_content"
-        android:background="@android:color/transparent"
         android:layout_height="wrap_content"
-        android:scaleType="centerCrop"
-        android:checkable="true"
         android:layout_margin="16dp"
+        android:background="@android:color/transparent"
+        android:checkable="true"
         android:contentDescription="@string/todo3"
-        app:layout_constraintTop_toBottomOf="@+id/content"
-        app:layout_constraintStart_toStartOf="parent"
+        android:minWidth="0dp"
         app:icon="@drawable/like_selector"
-        tools:text="10"
-        />
+        app:iconPadding="4dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/attachmentGroup"
+        tools:text="10" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/share"
@@ -117,21 +134,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
+        android:background="@android:color/transparent"
         android:checkable="true"
         android:contentDescription="@string/todo3"
-        android:background="@android:color/transparent"
         android:minWidth="0dp"
-        android:scaleType="centerCrop"
         app:icon="@drawable/share"
         app:iconPadding="4dp"
+        app:layout_constraintBottom_toBottomOf="@+id/like"
         app:layout_constraintStart_toEndOf="@+id/like"
         app:layout_constraintTop_toTopOf="@+id/like"
-        app:layout_constraintBottom_toBottomOf="@+id/like"
         tools:text="15" />
 
-    <!-- Кнопка меню (три точки) -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/menu"
         style="@style/Widget.Material3.Button.TextButton.Icon"
@@ -139,28 +152,24 @@
         android:layout_height="48dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
+        android:background="@android:color/transparent"
         app:icon="@drawable/baseline_more_vert_24"
         app:iconGravity="textEnd"
-        android:background="@android:color/transparent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Счётчик просмотров -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/views"
         style="@style/Widget.Material3.Button.TextButton.Icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
+        android:background="@android:color/transparent"
         app:icon="@drawable/view"
         app:iconGravity="textStart"
-        android:background="@android:color/transparent"
         app:layout_constraintBottom_toBottomOf="@+id/share"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/content"
         app:layout_constraintTop_toTopOf="@+id/share"
-        app:layout_constraintVertical_bias="0.903"
         tools:text="2000" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

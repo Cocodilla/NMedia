@@ -4,8 +4,11 @@ plugins {
     id "kotlin-parcelize"
     id "androidx.navigation.safeargs.kotlin"
 
-    // 👇 обязательно для Firebase
+    //  для Firebase
     id "com.google.gms.google-services"
+
+    // Glide
+    id 'kotlin-kapt'
 }
 
 android {
@@ -32,7 +35,7 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
-        // ✅ важно для java.time на minSdk < 26
+        // java.time на minSdk < 26
         coreLibraryDesugaringEnabled true
     }
 
@@ -54,7 +57,7 @@ dependencies {
     implementation libs.androidx.constraintlayout
     implementation libs.androidx.navigation.fragment.ktx
     implementation libs.androidx.navigation.ui.ktx
-    // ✅ для java.time (DateTimeFormatter и т.п.) на API 24-25
+    //  java.time
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.0.4"
 
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2"
@@ -66,7 +69,7 @@ dependencies {
     implementation "androidx.cardview:cardview:1.0.0"
     implementation "androidx.coordinatorlayout:coordinatorlayout:1.2.0"
 
-    // ✅ Firebase Cloud Messaging
+    //  Firebase Cloud Messaging
     implementation platform("com.google.firebase:firebase-bom:34.0.0")
     implementation "com.google.firebase:firebase-messaging"
     implementation libs.google.material
@@ -78,6 +81,10 @@ dependencies {
     // сеть
     implementation "com.squareup.okhttp3:okhttp:4.12.0"
 
-    // Swipe to Refresh (Задача №2)
+    // Swipe to Refresh
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
+    // Glide
+    implementation 'com.github.bumptech.glide:glide:4.16.0'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
+
 }

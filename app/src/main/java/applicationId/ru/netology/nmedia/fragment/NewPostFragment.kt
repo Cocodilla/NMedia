@@ -54,11 +54,8 @@ class NewPostFragment : Fragment() {
             if (content.isEmpty()) return@setOnClickListener
 
             val post = editingPost
-            if (post == null) {
-                viewModel.save(content)
-            } else {
-                viewModel.edit(post.id, content) // ✅ редактирование через сервер
-            }
+            if (post == null) viewModel.save(content)
+            else viewModel.edit(post.id, content)
 
             findNavController().navigateUp()
         }
