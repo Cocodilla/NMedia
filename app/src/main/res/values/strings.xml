@@ -44,7 +44,7 @@
     <string name="error_title" translatable="false">Произошла ошибка</string>
     <string name="error_message" translatable="false">Не удалось загрузить данные. Проверьте подключение и попробуйте ещё раз.</string>
     <string name="retry" translatable="false">Повторить</string>
-    <string name="playButton">TODO</string>
+    <string name="playButton" translatable="false">TODO</string>
     <string name="attachment_image">Attachment image</string>
 
 
