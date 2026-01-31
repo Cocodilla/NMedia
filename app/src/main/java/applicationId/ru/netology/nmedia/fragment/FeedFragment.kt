@@ -2,7 +2,6 @@ package applicationId.ru.netology.nmedia.fragment
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,7 +16,6 @@ import applicationId.ru.netology.nmedia.databinding.FragmentFeedBinding
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
 
-
 class FeedFragment : Fragment() {
 
     private var _binding: FragmentFeedBinding? = null
@@ -29,15 +27,17 @@ class FeedFragment : Fragment() {
 
     private lateinit var adapter: PostAdapter
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentFeedBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        Log.d("FeedFragment", "onViewCreated")
 
         setupRecyclerView()
         setupObservers()
@@ -65,6 +65,7 @@ class FeedFragment : Fragment() {
         })
 
         binding.list.layoutManager = LinearLayoutManager(requireContext())
+        binding.list.setHasFixedSize(true)
         binding.list.adapter = adapter
     }
 

@@ -27,10 +27,6 @@ class PostFragment : Fragment() {
 
     private val args: PostFragmentArgs by navArgs()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -44,13 +40,24 @@ class PostFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val postId = args.postId
-        val post = viewModel.data.value?.find { it.id == postId }
 
-        post?.let { setupPost(it) } ?: run {
-            findNavController().navigateUp()
+        // Если список пустой (например, открыли PostFragment до загрузки) — подгрузим
+        if (viewModel.data.value.isNullOrEmpty()) {
+            viewModel.loadPosts()
         }
 
-        // Кнопка "Назад" в Toolbar (если ActionBar есть)
+        // Ждём данные и рисуем, когда пост появится
+        viewModel.data.observe(viewLifecycleOwner) { posts ->
+            val post = posts.find { it.id == postId }
+            if (post == null) {
+                // если поста реально нет — выйдем назад
+                // (например, его удалили)
+                findNavController().navigateUp()
+                return@observe
+            }
+            setupPost(post)
+        }
+
         (requireActivity() as? androidx.appcompat.app.AppCompatActivity)
             ?.supportActionBar
             ?.setDisplayHomeAsUpEnabled(true)
@@ -88,19 +95,6 @@ class PostFragment : Fragment() {
                 videoGroup.setOnClickListener { playVideo(post.video) }
             }
         }
-
-        viewModel.data.observe(viewLifecycleOwner) { posts ->
-            posts.find { it.id == post.id }?.let { updatedPost ->
-                binding.apply {
-                    likeCount.text = updatedPost.likes.toString()
-                    shareCount.text = updatedPost.shares.toString()
-                    viewsCount.text = updatedPost.views.toString()
-                    like.setImageResource(
-                        if (updatedPost.likedByMe) R.drawable.love_like_heart_icon_196980 else R.drawable.like_selector
-                    )
-                }
-            }
-        }
     }
 
     private fun showMenu(post: Post, view: View) {
@@ -113,13 +107,11 @@ class PostFragment : Fragment() {
                         findNavController().navigate(action)
                         true
                     }
-
                     R.id.remove -> {
                         viewModel.removeById(post.id)
                         findNavController().navigateUp()
                         true
                     }
-
                     else -> false
                 }
             }
@@ -132,8 +124,7 @@ class PostFragment : Fragment() {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, content)
         }
-        val chooser = Intent.createChooser(intent, getString(R.string.chooser_share_post))
-        startActivity(chooser)
+        startActivity(Intent.createChooser(intent, getString(R.string.chooser_share_post)))
     }
 
     private fun playVideo(videoUrl: String?) {

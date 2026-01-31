@@ -9,7 +9,10 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.databinding.CardPostBinding
+import applicationId.ru.netology.nmedia.dto.AttachmentType
 import applicationId.ru.netology.nmedia.dto.Post
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 
 class PostAdapter(
     private val interactionListener: OnInteractionListener
@@ -28,86 +31,87 @@ class PostAdapter(
         private val binding: CardPostBinding
     ) : RecyclerView.ViewHolder(binding.root) {
 
-        private var currentPost: Post? = null
+        fun bind(post: Post) = with(binding) {
+            author.text = post.author
+            published.text = post.published
+            content.text = post.content
 
-        init {
-            binding.root.setOnClickListener {
-                currentPost?.let { post ->
-                    interactionListener.onPostClick(post)
-                }
+            like.isChecked = post.likedByMe
+            like.text = post.likes.toString()
+            share.text = post.shares.toString()
+            views.text = post.views.toString()
+
+            // --- Avatar ---
+            val avatarUrl = post.authorAvatar?.let { fileName ->
+                "$BASE_URL/avatars/$fileName"
             }
 
-            binding.like.setOnClickListener {
-                currentPost?.let { post ->
-                    interactionListener.onLike(post)
-                }
+            Glide.with(avatar)
+                .load(avatarUrl)
+                .circleCrop()
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .placeholder(R.drawable.ic_avatar_placeholder)
+                .error(R.drawable.ic_avatar_placeholder)
+                .into(avatar)
+
+            // --- Video block ---
+            if (post.video.isNullOrEmpty()) {
+                videoGroup.visibility = View.GONE
+            } else {
+                videoGroup.visibility = View.VISIBLE
             }
 
-            binding.share.setOnClickListener {
-                currentPost?.let { post ->
-                    interactionListener.onShare(post)
-                }
-            }
+            // --- Attachment (IMAGE) ---
+            val att = post.attachment
+            if (att == null) {
+                attachmentGroup.visibility = View.GONE
+            } else {
+                attachmentGroup.visibility = View.VISIBLE
 
-            binding.menu.setOnClickListener {
-                currentPost?.let { post ->
-                    showMenu(post, it)
-                }
-            }
+                when (att.type) {
+                    AttachmentType.IMAGE -> {
+                        val imageUrl = "$BASE_URL/images/${att.url}"
 
-            binding.videoGroup.setOnClickListener {
-                currentPost?.let { post ->
-                    if (!post.video.isNullOrEmpty()) {
-                        interactionListener.onVideoPlay(post)
+                        Glide.with(attachmentImage)
+                            .load(imageUrl)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .placeholder(R.drawable.ic_image_placeholder)
+                            .error(R.drawable.ic_image_placeholder)
+                            .into(attachmentImage)
                     }
                 }
             }
 
-            binding.playButton.setOnClickListener {
-                currentPost?.let { post ->
-                    if (!post.video.isNullOrEmpty()) {
-                        interactionListener.onVideoPlay(post)
-                    }
-                }
-            }
-        }
+            // --- Clicks ---
+            root.setOnClickListener { interactionListener.onPostClick(post) }
+            like.setOnClickListener { interactionListener.onLike(post) }
+            share.setOnClickListener { interactionListener.onShare(post) }
 
-        fun bind(post: Post) {
-            currentPost = post
-            binding.apply {
-                author.text = post.author
-                published.text = post.published
-                content.text = post.content
-                like.isChecked = post.likedByMe
-                like.text = post.likes.toString()
-                share.text = post.shares.toString()
-                views.text = post.views.toString()
-
-                if (post.video.isNullOrEmpty()) {
-                    videoGroup.visibility = View.GONE
-                } else {
-                    videoGroup.visibility = View.VISIBLE
-                }
-            }
-        }
-
-        private fun showMenu(post: Post, view: View) {
-            PopupMenu(view.context, view).apply {
-                inflate(R.menu.menu_post)
-                setOnMenuItemClickListener { item ->
-                    when (item.itemId) {
-                        R.id.edit -> {
-                            interactionListener.onEdit(post)
-                            true
+            menu.setOnClickListener { view ->
+                PopupMenu(view.context, view).apply {
+                    inflate(R.menu.menu_post)
+                    setOnMenuItemClickListener { item ->
+                        when (item.itemId) {
+                            R.id.edit -> {
+                                interactionListener.onEdit(post)
+                                true
+                            }
+                            R.id.remove -> {
+                                interactionListener.onRemove(post)
+                                true
+                            }
+                            else -> false
                         }
-                        R.id.remove -> {
-                            interactionListener.onRemove(post)
-                            true
-                        }
-                        else -> false
                     }
-                }
-            }.show()
+                }.show()
+            }
+
+            videoGroup.setOnClickListener {
+                if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
+            }
+            playButton.setOnClickListener {
+                if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
+            }
         }
     }
 
@@ -117,17 +121,18 @@ class PostAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val post = getItem(position)
-        holder.bind(post)
+        holder.bind(getItem(position))
+    }
+
+    companion object {
+        private const val BASE_URL = "http://10.0.2.2:9999"
     }
 }
 
 class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
-    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean {
-        return oldItem.id == newItem.id
-    }
+    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean =
+        oldItem.id == newItem.id
 
-    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean {
-        return oldItem == newItem
-    }
+    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean =
+        oldItem == newItem
 }
