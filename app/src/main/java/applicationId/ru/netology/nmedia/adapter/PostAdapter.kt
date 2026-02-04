@@ -52,6 +52,7 @@ class PostAdapter(
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .placeholder(R.drawable.ic_avatar_placeholder)
                 .error(R.drawable.ic_avatar_placeholder)
+                .timeout(10_000)
                 .into(avatar)
 
             // --- Video block ---
@@ -77,7 +78,9 @@ class PostAdapter(
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .placeholder(R.drawable.ic_image_placeholder)
                             .error(R.drawable.ic_image_placeholder)
+                            .timeout(10_000)
                             .into(attachmentImage)
+
                     }
                 }
             }

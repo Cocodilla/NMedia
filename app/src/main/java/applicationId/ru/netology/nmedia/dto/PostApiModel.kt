@@ -33,9 +33,9 @@ private val timeFmt = DateTimeFormatter.ofPattern("HH:mm", localeRu)
 private val dayMonthFmt = DateTimeFormatter.ofPattern("dd MMM", localeRu)
 private val fullFmt = DateTimeFormatter.ofPattern("dd MMM yyyy", localeRu)
 
-private fun humanDate(millis: Long): String {
+private fun humanDate(seconds: Long): String {
     val zone = ZoneId.systemDefault()
-    val dt = Instant.ofEpochMilli(millis).atZone(zone)
+    val dt = Instant.ofEpochSecond(seconds).atZone(zone)
     val date = dt.toLocalDate()
 
     val today = LocalDate.now(zone)
@@ -48,6 +48,7 @@ private fun humanDate(millis: Long): String {
         else -> "${dt.format(fullFmt)} в ${dt.format(timeFmt)}"
     }
 }
+
 
 /* ---------- API → UI ---------- */
 

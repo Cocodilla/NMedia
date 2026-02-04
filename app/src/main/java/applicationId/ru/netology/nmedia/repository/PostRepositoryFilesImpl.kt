@@ -14,8 +14,6 @@ import java.util.concurrent.TimeUnit
 class PostRepositoryImpl : PostRepository {
 
     private val gson = Gson()
-
-    // --- Dispatcher: ЯВНО по заданию ---
     private val dispatcher = Dispatcher().apply {
         maxRequests = 64          // общий максимум
         maxRequestsPerHost = 5    // максимум на один хост
@@ -29,7 +27,7 @@ class PostRepositoryImpl : PostRepository {
         .build()
 
     init {
-        // 🔍 лог — чтобы было видно, что Dispatcher настроен
+        // лог — чтобы было видно, что Dispatcher настроен
         println(
             "OkHttp Dispatcher configured: " +
                     "maxRequests=${dispatcher.maxRequests}, " +
@@ -94,7 +92,7 @@ class PostRepositoryImpl : PostRepository {
             id = 0L,
             author = "Me",
             content = content,
-            published = System.currentTimeMillis(),
+            published = System.currentTimeMillis() / 1000,
             likedByMe = false,
             likes = 0,
             shares = 0,
@@ -121,7 +119,7 @@ class PostRepositoryImpl : PostRepository {
             id = id,
             author = "Me",
             content = content,
-            published = System.currentTimeMillis(),
+            published = System.currentTimeMillis() / 1000,
             likedByMe = false,
             likes = 0,
             shares = 0,
