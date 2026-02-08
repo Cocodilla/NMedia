@@ -46,4 +46,5 @@
     <string name="retry" translatable="false">Повторить</string>
     <string name="playButton" translatable="false">TODO</string>
     <string name="attachment_image">Attachment image</string>
+
 </resources>

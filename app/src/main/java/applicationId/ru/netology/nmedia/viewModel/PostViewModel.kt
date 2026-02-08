@@ -1,6 +1,5 @@
- package applicationId.ru.netology.nmedia.viewModel
+package applicationId.ru.netology.nmedia.viewModel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -15,6 +14,10 @@ class PostViewModel : ViewModel() {
     private val _data = MutableLiveData<List<Post>>(emptyList())
     val data: LiveData<List<Post>> = _data
 
+    //  текст ошибки для UI
+    private val _error = MutableLiveData<String?>(null)
+    val error: LiveData<String?> = _error
+
     init {
         loadPosts()
     }
@@ -23,10 +26,12 @@ class PostViewModel : ViewModel() {
         repository.getAll(object : PostRepository.Callback<List<Post>> {
             override fun onSuccess(value: List<Post>) {
                 _data.postValue(value)
+                _error.postValue(null)
             }
 
             override fun onError(e: Exception) {
-                Log.e("PostViewModel", "loadPosts error", e)
+                _error.postValue(e.message ?: "Ошибка загрузки")
+                e.printStackTrace()
             }
         })
     }
@@ -38,10 +43,12 @@ class PostViewModel : ViewModel() {
             override fun onSuccess(value: Post) {
                 val updated = _data.value.orEmpty().map { if (it.id == value.id) value else it }
                 _data.postValue(updated)
+                _error.postValue(null)
             }
 
             override fun onError(e: Exception) {
-                Log.e("PostViewModel", "like error", e)
+                _error.postValue(e.message ?: "Ошибка лайка")
+                e.printStackTrace()
             }
         }
 
@@ -52,14 +59,13 @@ class PostViewModel : ViewModel() {
     fun removeById(id: Long) {
         repository.removeById(id, object : PostRepository.Callback<Unit> {
             override fun onSuccess(value: Unit) {
-                // можно локально убрать сразу
                 _data.postValue(_data.value.orEmpty().filter { it.id != id })
-                // и добрать актуальное с сервера (на случай сортировки/логики сервера)
-                loadPosts()
+                _error.postValue(null)
             }
 
             override fun onError(e: Exception) {
-                Log.e("PostViewModel", "remove error", e)
+                _error.postValue(e.message ?: "Ошибка удаления")
+                e.printStackTrace()
             }
         })
     }
@@ -67,12 +73,13 @@ class PostViewModel : ViewModel() {
     fun save(content: String) {
         repository.save(content, object : PostRepository.Callback<Post> {
             override fun onSuccess(value: Post) {
-                // сервер может менять поля → лучше перезагрузить ленту
-                loadPosts()
+                _data.postValue(listOf(value) + _data.value.orEmpty())
+                _error.postValue(null)
             }
 
             override fun onError(e: Exception) {
-                Log.e("PostViewModel", "save error", e)
+                _error.postValue(e.message ?: "Ошибка сохранения")
+                e.printStackTrace()
             }
         })
     }
@@ -80,13 +87,20 @@ class PostViewModel : ViewModel() {
     fun edit(id: Long, content: String) {
         repository.editById(id, content, object : PostRepository.Callback<Post> {
             override fun onSuccess(value: Post) {
-                // сервер может менять поля → лучше перезагрузить ленту
-                loadPosts()
+                val updated = _data.value.orEmpty().map { if (it.id == value.id) value else it }
+                _data.postValue(updated)
+                _error.postValue(null)
             }
 
             override fun onError(e: Exception) {
-                Log.e("PostViewModel", "edit error", e)
+                _error.postValue(e.message ?: "Ошибка редактирования")
+                e.printStackTrace()
             }
         })
+    }
+
+    // не показывать одну и ту же ошибку бесконечно при повороте экрана
+    fun clearError() {
+        _error.value = null
     }
 }

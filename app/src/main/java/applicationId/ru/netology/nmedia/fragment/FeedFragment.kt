@@ -15,6 +15,7 @@ import applicationId.ru.netology.nmedia.adapter.PostAdapter
 import applicationId.ru.netology.nmedia.databinding.FragmentFeedBinding
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
+import com.google.android.material.snackbar.Snackbar
 
 class FeedFragment : Fragment() {
 
@@ -73,6 +74,22 @@ class FeedFragment : Fragment() {
         viewModel.data.observe(viewLifecycleOwner) { posts ->
             adapter.submitList(posts)
             binding.swipeRefresh.isRefreshing = false
+        }
+
+        //  обработка ошибок + кнопка Retry
+        viewModel.error.observe(viewLifecycleOwner) { message ->
+            if (message == null) return@observe
+
+            binding.swipeRefresh.isRefreshing = false
+
+            Snackbar.make(binding.root, message, Snackbar.LENGTH_INDEFINITE)
+                .setAction(R.string.retry) {
+                    binding.swipeRefresh.isRefreshing = true
+                    viewModel.loadPosts()
+                }
+                .show()
+
+            viewModel.clearError()
         }
     }
 

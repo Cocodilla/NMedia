@@ -14,9 +14,11 @@ import java.util.concurrent.TimeUnit
 class PostRepositoryImpl : PostRepository {
 
     private val gson = Gson()
+
+    // Dispatcher
     private val dispatcher = Dispatcher().apply {
-        maxRequests = 64          // общий максимум
-        maxRequestsPerHost = 5    // максимум на один хост
+        maxRequests = 64
+        maxRequestsPerHost = 5
     }
 
     private val client = OkHttpClient.Builder()
@@ -27,7 +29,6 @@ class PostRepositoryImpl : PostRepository {
         .build()
 
     init {
-        // лог — чтобы было видно, что Dispatcher настроен
         println(
             "OkHttp Dispatcher configured: " +
                     "maxRequests=${dispatcher.maxRequests}, " +
@@ -35,31 +36,33 @@ class PostRepositoryImpl : PostRepository {
         )
     }
 
+    // ---------- GET ALL ----------
     override fun getAll(callback: PostRepository.Callback<List<Post>>) {
         val request = Request.Builder()
             .url("$BASE_URL/api/posts")
-            .get()
             .build()
 
         client.newCall(request).enqueue(object : Callback {
+
             override fun onFailure(call: Call, e: IOException) {
-                callback.onError(e)
+                callback.onError(e) // ❗ network error
             }
 
             override fun onResponse(call: Call, response: Response) {
                 response.use {
-                    try {
-                        if (!it.isSuccessful) {
-                            throw RuntimeException("Error: ${it.code}")
-                        }
+                    if (!it.isSuccessful) {
+                        callback.onError(RuntimeException("Server error: ${it.code}"))
+                        return
+                    }
 
+                    try {
                         val body = it.body?.string()
                             ?: throw RuntimeException("Empty body")
 
                         val type = object : TypeToken<List<PostApiModel>>() {}.type
                         val apiPosts: List<PostApiModel> = gson.fromJson(body, type)
 
-                        callback.onSuccess(apiPosts.map { p -> p.toUi() })
+                        callback.onSuccess(apiPosts.map { post -> post.toUi() })
                     } catch (e: Exception) {
                         callback.onError(e)
                     }
@@ -68,6 +71,7 @@ class PostRepositoryImpl : PostRepository {
         })
     }
 
+    // ---------- LIKE ----------
     override fun likeById(id: Long, callback: PostRepository.Callback<Post>) {
         val request = Request.Builder()
             .url("$BASE_URL/api/posts/$id/likes")
@@ -77,6 +81,7 @@ class PostRepositoryImpl : PostRepository {
         client.newCall(request).enqueue(postCallback(callback))
     }
 
+    // ---------- UNLIKE ----------
     override fun unlikeById(id: Long, callback: PostRepository.Callback<Post>) {
         val request = Request.Builder()
             .url("$BASE_URL/api/posts/$id/likes")
@@ -86,8 +91,8 @@ class PostRepositoryImpl : PostRepository {
         client.newCall(request).enqueue(postCallback(callback))
     }
 
+    // ---------- SAVE ----------
     override fun save(content: String, callback: PostRepository.Callback<Post>) {
-        // Новый пост: id = 0, published = Long (как требует сервер)
         val api = PostApiModel(
             id = 0L,
             author = "Me",
@@ -102,8 +107,8 @@ class PostRepositoryImpl : PostRepository {
             else null
         )
 
-        val mediaType = "application/json; charset=utf-8".toMediaType()
-        val body = gson.toJson(api).toRequestBody(mediaType)
+        val body = gson.toJson(api)
+            .toRequestBody("application/json; charset=utf-8".toMediaType())
 
         val request = Request.Builder()
             .url("$BASE_URL/api/posts")
@@ -113,8 +118,8 @@ class PostRepositoryImpl : PostRepository {
         client.newCall(request).enqueue(postCallback(callback))
     }
 
+    // ---------- EDIT ----------
     override fun editById(id: Long, content: String, callback: PostRepository.Callback<Post>) {
-        // Редактирование: id != 0
         val api = PostApiModel(
             id = id,
             author = "Me",
@@ -124,13 +129,11 @@ class PostRepositoryImpl : PostRepository {
             likes = 0,
             shares = 0,
             views = 0,
-            video = if (content.contains("rutube", ignoreCase = true))
-                "https://rutube.ru/video/6550a91e7e523f9503bed47e4c46d0cb"
-            else null
+            video = null
         )
 
-        val mediaType = "application/json; charset=utf-8".toMediaType()
-        val body = gson.toJson(api).toRequestBody(mediaType)
+        val body = gson.toJson(api)
+            .toRequestBody("application/json; charset=utf-8".toMediaType())
 
         val request = Request.Builder()
             .url("$BASE_URL/api/posts")
@@ -140,6 +143,7 @@ class PostRepositoryImpl : PostRepository {
         client.newCall(request).enqueue(postCallback(callback))
     }
 
+    // ---------- REMOVE ----------
     override fun removeById(id: Long, callback: PostRepository.Callback<Unit>) {
         val request = Request.Builder()
             .url("$BASE_URL/api/posts/$id")
@@ -147,38 +151,39 @@ class PostRepositoryImpl : PostRepository {
             .build()
 
         client.newCall(request).enqueue(object : Callback {
+
             override fun onFailure(call: Call, e: IOException) {
                 callback.onError(e)
             }
 
             override fun onResponse(call: Call, response: Response) {
                 response.use {
-                    try {
-                        if (!it.isSuccessful) {
-                            throw RuntimeException("Error: ${it.code}")
-                        }
-                        callback.onSuccess(Unit)
-                    } catch (e: Exception) {
-                        callback.onError(e)
+                    if (!it.isSuccessful) {
+                        callback.onError(RuntimeException("Server error: ${it.code}"))
+                        return
                     }
+                    callback.onSuccess(Unit)
                 }
             }
         })
     }
 
+    // ---------- COMMON POST CALLBACK ----------
     private fun postCallback(callback: PostRepository.Callback<Post>): Callback =
         object : Callback {
+
             override fun onFailure(call: Call, e: IOException) {
                 callback.onError(e)
             }
 
             override fun onResponse(call: Call, response: Response) {
                 response.use {
-                    try {
-                        if (!it.isSuccessful) {
-                            throw RuntimeException("Error: ${it.code}")
-                        }
+                    if (!it.isSuccessful) {
+                        callback.onError(RuntimeException("Server error: ${it.code}"))
+                        return
+                    }
 
+                    try {
                         val body = it.body?.string()
                             ?: throw RuntimeException("Empty body")
 
