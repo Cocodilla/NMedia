@@ -1,106 +1,59 @@
 package applicationId.ru.netology.nmedia.viewModel
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.*
 import applicationId.ru.netology.nmedia.dto.Post
+import applicationId.ru.netology.nmedia.error.AppError
 import applicationId.ru.netology.nmedia.repository.PostRepository
-import applicationId.ru.netology.nmedia.repository.PostRepositoryImpl
+import kotlinx.coroutines.launch
 
-class PostViewModel : ViewModel() {
+data class FeedState(
+    val loading: Boolean = false,
+    val error: AppError? = null
+)
 
-    private val repository: PostRepository = PostRepositoryImpl()
+class PostViewModel(
+    private val repository: PostRepository
+) : ViewModel() {
 
-    private val _data = MutableLiveData<List<Post>>(emptyList())
-    val data: LiveData<List<Post>> = _data
+    val data: LiveData<List<Post>> = repository.data.asLiveData()
 
-    //  текст ошибки для UI
-    private val _error = MutableLiveData<String?>(null)
-    val error: LiveData<String?> = _error
+    private val _state = MutableLiveData(FeedState())
+    val state: LiveData<FeedState> = _state
+
+    private var lastAction: (suspend () -> Unit)? = null
 
     init {
         loadPosts()
     }
 
-    fun loadPosts() {
-        repository.getAll(object : PostRepository.Callback<List<Post>> {
-            override fun onSuccess(value: List<Post>) {
-                _data.postValue(value)
-                _error.postValue(null)
-            }
+    fun loadPosts() = runAction({ repository.refresh() })
 
-            override fun onError(e: Exception) {
-                _error.postValue(e.message ?: "Ошибка загрузки")
-                e.printStackTrace()
-            }
-        })
+    fun save(content: String) = runAction({ repository.save(content) })
+
+    fun edit(id: Long, content: String) = runAction({ repository.editById(id, content) })
+
+    fun likeById(id: Long) = runAction({ repository.likeById(id) })
+
+    fun removeById(id: Long) = runAction({ repository.removeById(id) })
+
+    fun retry() {
+        val action = lastAction ?: return
+        runAction(action)
     }
 
-    fun like(id: Long) {
-        val post = _data.value?.find { it.id == id } ?: return
 
-        val cb = object : PostRepository.Callback<Post> {
-            override fun onSuccess(value: Post) {
-                val updated = _data.value.orEmpty().map { if (it.id == value.id) value else it }
-                _data.postValue(updated)
-                _error.postValue(null)
-            }
-
-            override fun onError(e: Exception) {
-                _error.postValue(e.message ?: "Ошибка лайка")
-                e.printStackTrace()
+    private fun runAction(action: suspend () -> Unit) {
+        lastAction = action
+        viewModelScope.launch {
+            _state.value = FeedState(loading = true)
+            try {
+                action()
+                _state.value = FeedState()
+            } catch (e: AppError) {
+                _state.value = FeedState(error = e)
+            } catch (e: Exception) {
+                _state.value = FeedState(error = null)
             }
         }
-
-        if (post.likedByMe) repository.unlikeById(id, cb)
-        else repository.likeById(id, cb)
-    }
-
-    fun removeById(id: Long) {
-        repository.removeById(id, object : PostRepository.Callback<Unit> {
-            override fun onSuccess(value: Unit) {
-                _data.postValue(_data.value.orEmpty().filter { it.id != id })
-                _error.postValue(null)
-            }
-
-            override fun onError(e: Exception) {
-                _error.postValue(e.message ?: "Ошибка удаления")
-                e.printStackTrace()
-            }
-        })
-    }
-
-    fun save(content: String) {
-        repository.save(content, object : PostRepository.Callback<Post> {
-            override fun onSuccess(value: Post) {
-                _data.postValue(listOf(value) + _data.value.orEmpty())
-                _error.postValue(null)
-            }
-
-            override fun onError(e: Exception) {
-                _error.postValue(e.message ?: "Ошибка сохранения")
-                e.printStackTrace()
-            }
-        })
-    }
-
-    fun edit(id: Long, content: String) {
-        repository.editById(id, content, object : PostRepository.Callback<Post> {
-            override fun onSuccess(value: Post) {
-                val updated = _data.value.orEmpty().map { if (it.id == value.id) value else it }
-                _data.postValue(updated)
-                _error.postValue(null)
-            }
-
-            override fun onError(e: Exception) {
-                _error.postValue(e.message ?: "Ошибка редактирования")
-                e.printStackTrace()
-            }
-        })
-    }
-
-    // не показывать одну и ту же ошибку бесконечно при повороте экрана
-    fun clearError() {
-        _error.value = null
     }
 }

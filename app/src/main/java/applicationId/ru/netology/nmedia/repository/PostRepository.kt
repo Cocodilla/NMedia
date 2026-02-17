@@ -1,22 +1,16 @@
 package applicationId.ru.netology.nmedia.repository
 
 import applicationId.ru.netology.nmedia.dto.Post
+import kotlinx.coroutines.flow.Flow
 
 interface PostRepository {
+    val data: Flow<List<Post>>
 
-    interface Callback<T> {
-        fun onSuccess(value: T)
-        fun onError(e: Exception)
-    }
+    suspend fun refresh()
 
-    fun getAll(callback: Callback<List<Post>>)
+    suspend fun save(content: String)
+    suspend fun editById(id: Long, content: String)
 
-    fun likeById(id: Long, callback: Callback<Post>)
-    fun unlikeById(id: Long, callback: Callback<Post>)
-
-    fun save(content: String, callback: Callback<Post>)
-
-    fun editById(id: Long, content: String, callback: Callback<Post>)
-
-    fun removeById(id: Long, callback: Callback<Unit>)
+    suspend fun likeById(id: Long)
+    suspend fun removeById(id: Long)
 }

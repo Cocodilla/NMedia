@@ -10,6 +10,8 @@
     <string name="error_empty_content">Пусто</string>
     <string name="chooser_play_video">Воспроизвести видео</string>
     <string name="attachment_image">Изображение вложения</string>
+    <string name="error_unknown">Ошибка</string>
+
 
 </resources>
 

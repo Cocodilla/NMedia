@@ -41,17 +41,13 @@ class PostFragment : Fragment() {
 
         val postId = args.postId
 
-        // Если список пустой (например, открыли PostFragment до загрузки) — подгрузим
         if (viewModel.data.value.isNullOrEmpty()) {
             viewModel.loadPosts()
         }
 
-        // Ждём данные и рисуем, когда пост появится
         viewModel.data.observe(viewLifecycleOwner) { posts ->
             val post = posts.find { it.id == postId }
             if (post == null) {
-                // если поста реально нет — выйдем назад
-                // (например, его удалили)
                 findNavController().navigateUp()
                 return@observe
             }
@@ -73,10 +69,13 @@ class PostFragment : Fragment() {
             viewsCount.text = post.views.toString()
 
             like.setImageResource(
-                if (post.likedByMe) R.drawable.love_like_heart_icon_196980 else R.drawable.like_selector
+                if (post.likedByMe) R.drawable.love_like_heart_icon_196980
+                else R.drawable.like_selector
             )
+
             like.setOnClickListener {
-                viewModel.like(post.id)
+                // ✅ ВОТ ЭТА СТРОКА ИСПРАВЛЕНА
+                viewModel.likeById(post.id)
             }
 
             share.setOnClickListener {
@@ -119,8 +118,7 @@ class PostFragment : Fragment() {
     }
 
     private fun sharePost(content: String) {
-        val intent = Intent().apply {
-            action = Intent.ACTION_SEND
+        val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, content)
         }

@@ -1,0 +1,23 @@
+package applicationId.ru.netology.nmedia.dto
+
+import applicationId.ru.netology.nmedia.dto.PostApiModel
+import retrofit2.Response
+import retrofit2.http.*
+
+interface PostsService {
+
+    @GET("api/posts")
+    suspend fun getAll(): Response<List<PostApiModel>>
+
+    @POST("api/posts")
+    suspend fun save(@Body post: PostApiModel): Response<PostApiModel>
+
+    @POST("api/posts/{id}/likes")
+    suspend fun likeById(@Path("id") id: Long): Response<PostApiModel>
+
+    @DELETE("api/posts/{id}/likes")
+    suspend fun unlikeById(@Path("id") id: Long): Response<PostApiModel>
+
+    @DELETE("api/posts/{id}")
+    suspend fun removeById(@Path("id") id: Long): Response<Unit>
+}

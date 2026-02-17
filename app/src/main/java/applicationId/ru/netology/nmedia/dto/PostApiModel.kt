@@ -11,7 +11,7 @@ data class PostApiModel(
     val author: String,
     val authorAvatar: String? = null,
     val content: String,
-    val published: Long,
+    val published: Long, // seconds (unix time)
     val likedByMe: Boolean = false,
     val likes: Int = 0,
     val shares: Int = 0,
@@ -22,11 +22,11 @@ data class PostApiModel(
 
 data class AttachmentApiModel(
     val url: String,
-    val description: String? = null,
+    val description: String,
     val type: String
 )
 
-/* ---------- форматирование даты для UI ---------- */
+/* ---------- formatting ---------- */
 
 private val localeRu = Locale("ru")
 private val timeFmt = DateTimeFormatter.ofPattern("HH:mm", localeRu)
@@ -49,8 +49,7 @@ private fun humanDate(seconds: Long): String {
     }
 }
 
-
-/* ---------- API → UI ---------- */
+/* ---------- API -> UI ---------- */
 
 fun PostApiModel.toUi(): Post = Post(
     id = id,
@@ -64,10 +63,25 @@ fun PostApiModel.toUi(): Post = Post(
     views = views,
     video = video,
     attachment = attachment?.let {
-        Attachment(
+        Post.Attachment(
             url = it.url,
             description = it.description,
-            type = AttachmentType.IMAGE
+            type = it.type
         )
     }
+)
+
+/* ---------- UI -> API (save/edit) ---------- */
+fun Post.toApiForSave(): PostApiModel = PostApiModel(
+    id = if (id == 0L) 0L else id,
+    author = author.ifBlank { "Me" },
+    authorAvatar = authorAvatar,
+    content = content,
+    published = System.currentTimeMillis() / 1000, // server seconds
+    likedByMe = likedByMe,
+    likes = likes,
+    shares = shares,
+    views = views,
+    video = video,
+    attachment = attachment?.let { AttachmentApiModel(it.url, it.description, it.type) }
 )

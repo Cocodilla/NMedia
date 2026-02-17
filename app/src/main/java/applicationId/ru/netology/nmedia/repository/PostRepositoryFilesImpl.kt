@@ -1,202 +1,122 @@
 package applicationId.ru.netology.nmedia.repository
 
+import applicationId.ru.netology.nmedia.dto.PostsApi
+import applicationId.ru.netology.nmedia.dao.PostDao
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.dto.PostApiModel
 import applicationId.ru.netology.nmedia.dto.toUi
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
+import applicationId.ru.netology.nmedia.entity.PostEntity
+import applicationId.ru.netology.nmedia.error.ApiError
+import applicationId.ru.netology.nmedia.error.NetworkError
+import applicationId.ru.netology.nmedia.error.UnknownError
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.io.IOException
-import java.util.concurrent.TimeUnit
 
-class PostRepositoryImpl : PostRepository {
+class PostRepositoryImpl(
+    private val dao: PostDao
+) : PostRepository {
 
-    private val gson = Gson()
+    override val data: Flow<List<Post>> =
+        dao.getAll().map { list -> list.map(PostEntity::toDto) }
 
-    // Dispatcher
-    private val dispatcher = Dispatcher().apply {
-        maxRequests = 64
-        maxRequestsPerHost = 5
-    }
+    override suspend fun refresh() {
+        try {
+            val response = PostsApi.service.getAll()
+            if (!response.isSuccessful) throw ApiError(response.code(), response.message())
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
 
-    private val client = OkHttpClient.Builder()
-        .dispatcher(dispatcher)
-        .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
-        .build()
-
-    init {
-        println(
-            "OkHttp Dispatcher configured: " +
-                    "maxRequests=${dispatcher.maxRequests}, " +
-                    "maxRequestsPerHost=${dispatcher.maxRequestsPerHost}"
-        )
-    }
-
-    // ---------- GET ALL ----------
-    override fun getAll(callback: PostRepository.Callback<List<Post>>) {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/posts")
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-
-            override fun onFailure(call: Call, e: IOException) {
-                callback.onError(e) // ❗ network error
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!it.isSuccessful) {
-                        callback.onError(RuntimeException("Server error: ${it.code}"))
-                        return
-                    }
-
-                    try {
-                        val body = it.body?.string()
-                            ?: throw RuntimeException("Empty body")
-
-                        val type = object : TypeToken<List<PostApiModel>>() {}.type
-                        val apiPosts: List<PostApiModel> = gson.fromJson(body, type)
-
-                        callback.onSuccess(apiPosts.map { post -> post.toUi() })
-                    } catch (e: Exception) {
-                        callback.onError(e)
-                    }
-                }
-            }
-        })
-    }
-
-    // ---------- LIKE ----------
-    override fun likeById(id: Long, callback: PostRepository.Callback<Post>) {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/posts/$id/likes")
-            .post(ByteArray(0).toRequestBody())
-            .build()
-
-        client.newCall(request).enqueue(postCallback(callback))
-    }
-
-    // ---------- UNLIKE ----------
-    override fun unlikeById(id: Long, callback: PostRepository.Callback<Post>) {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/posts/$id/likes")
-            .delete()
-            .build()
-
-        client.newCall(request).enqueue(postCallback(callback))
-    }
-
-    // ---------- SAVE ----------
-    override fun save(content: String, callback: PostRepository.Callback<Post>) {
-        val api = PostApiModel(
-            id = 0L,
-            author = "Me",
-            content = content,
-            published = System.currentTimeMillis() / 1000,
-            likedByMe = false,
-            likes = 0,
-            shares = 0,
-            views = 0,
-            video = if (content.contains("rutube", ignoreCase = true))
-                "https://rutube.ru/video/6550a91e7e523f9503bed47e4c46d0cb"
-            else null
-        )
-
-        val body = gson.toJson(api)
-            .toRequestBody("application/json; charset=utf-8".toMediaType())
-
-        val request = Request.Builder()
-            .url("$BASE_URL/api/posts")
-            .post(body)
-            .build()
-
-        client.newCall(request).enqueue(postCallback(callback))
-    }
-
-    // ---------- EDIT ----------
-    override fun editById(id: Long, content: String, callback: PostRepository.Callback<Post>) {
-        val api = PostApiModel(
-            id = id,
-            author = "Me",
-            content = content,
-            published = System.currentTimeMillis() / 1000,
-            likedByMe = false,
-            likes = 0,
-            shares = 0,
-            views = 0,
-            video = null
-        )
-
-        val body = gson.toJson(api)
-            .toRequestBody("application/json; charset=utf-8".toMediaType())
-
-        val request = Request.Builder()
-            .url("$BASE_URL/api/posts")
-            .post(body)
-            .build()
-
-        client.newCall(request).enqueue(postCallback(callback))
-    }
-
-    // ---------- REMOVE ----------
-    override fun removeById(id: Long, callback: PostRepository.Callback<Unit>) {
-        val request = Request.Builder()
-            .url("$BASE_URL/api/posts/$id")
-            .delete()
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-
-            override fun onFailure(call: Call, e: IOException) {
-                callback.onError(e)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!it.isSuccessful) {
-                        callback.onError(RuntimeException("Server error: ${it.code}"))
-                        return
-                    }
-                    callback.onSuccess(Unit)
-                }
-            }
-        })
-    }
-
-    // ---------- COMMON POST CALLBACK ----------
-    private fun postCallback(callback: PostRepository.Callback<Post>): Callback =
-        object : Callback {
-
-            override fun onFailure(call: Call, e: IOException) {
-                callback.onError(e)
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use {
-                    if (!it.isSuccessful) {
-                        callback.onError(RuntimeException("Server error: ${it.code}"))
-                        return
-                    }
-
-                    try {
-                        val body = it.body?.string()
-                            ?: throw RuntimeException("Empty body")
-
-                        val api = gson.fromJson(body, PostApiModel::class.java)
-                        callback.onSuccess(api.toUi())
-                    } catch (e: Exception) {
-                        callback.onError(e)
-                    }
-                }
-            }
+            dao.insert(body.map { PostEntity.fromDto(it.toUi()) })
+        } catch (e: IOException) {
+            throw NetworkError
+        } catch (e: Exception) {
+            throw UnknownError
         }
+    }
 
-    companion object {
-        private const val BASE_URL = "http://10.0.2.2:9999"
+    override suspend fun save(content: String) {
+        try {
+            val api = PostApiModel(
+                id = 0L,
+                author = "Me",
+                content = content,
+                published = System.currentTimeMillis() / 1000
+            )
+
+            val response = PostsApi.service.save(api)
+            if (!response.isSuccessful) throw ApiError(response.code(), response.message())
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
+
+            dao.insert(PostEntity.fromDto(body.toUi()))
+        } catch (e: IOException) {
+            throw NetworkError
+        } catch (e: Exception) {
+            throw UnknownError
+        }
+    }
+
+    override suspend fun editById(id: Long, content: String) {
+        try {
+            val api = PostApiModel(
+                id = id,
+                author = "Me",
+                content = content,
+                published = System.currentTimeMillis() / 1000
+            )
+
+            val response = PostsApi.service.save(api)
+            if (!response.isSuccessful) throw ApiError(response.code(), response.message())
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
+
+            dao.insert(PostEntity.fromDto(body.toUi()))
+        } catch (e: IOException) {
+            throw NetworkError
+        } catch (e: Exception) {
+            throw UnknownError
+        }
+    }
+
+    override suspend fun likeById(id: Long) {
+        // 1) оптимистично меняем локально
+        dao.toggleLikeById(id)
+
+        // 2) пробуем на сервер
+        try {
+            val post = dao.getById(id) ?: return
+            val response =
+                if (post.likedByMe) PostsApi.service.likeById(id) else PostsApi.service.unlikeById(id)
+
+            if (!response.isSuccessful) throw ApiError(response.code(), response.message())
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
+
+            // 3) приводим локально к серверной истине
+            dao.insert(PostEntity.fromDto(body.toUi()))
+        } catch (e: Exception) {
+            // rollback (вернём как было)
+            dao.toggleLikeById(id)
+
+            if (e is IOException) throw NetworkError
+            if (e is ApiError) throw e
+            throw UnknownError
+        }
+    }
+
+    override suspend fun removeById(id: Long) {
+        // 1) запомним удаляемый пост и удалим локально
+        val backup = dao.getById(id)
+        dao.removeById(id)
+
+        // 2) удаляем на сервере
+        try {
+            val response = PostsApi.service.removeById(id)
+            if (!response.isSuccessful) throw ApiError(response.code(), response.message())
+        } catch (e: Exception) {
+            // rollback
+            if (backup != null) dao.insert(backup)
+
+            if (e is IOException) throw NetworkError
+            if (e is ApiError) throw e
+            throw UnknownError
+        }
     }
 }
