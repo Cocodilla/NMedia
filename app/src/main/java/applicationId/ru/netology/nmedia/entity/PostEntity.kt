@@ -4,56 +4,53 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import applicationId.ru.netology.nmedia.dto.Post
 
-@Entity(tableName = "posts")
+@Entity
 data class PostEntity(
-    @PrimaryKey(autoGenerate = false)
+    @PrimaryKey(autoGenerate = true)
     val id: Long,
     val author: String,
     val content: String,
-    val published: String,
+
+    // в БД всегда храним секунды unix time
+    val published: Long,
+
     val likedByMe: Boolean,
     val likes: Int,
     val shares: Int,
     val views: Int,
-    val video: String?,
-    val authorAvatar: String? = null,
-    val attachmentUrl: String? = null,
-    val attachmentDescription: String? = null,
-    val attachmentType: String? = null,
+    val video: String? = null,
+
+    // для New Posts
+    val visible: Boolean = true,
 ) {
     fun toDto(): Post = Post(
         id = id,
         author = author,
         content = content,
-        published = published,
+
+        published = published.toString(),
+
         likedByMe = likedByMe,
         likes = likes,
         shares = shares,
         views = views,
         video = video,
-        authorAvatar = authorAvatar,
-        attachment = if (attachmentUrl == null) null else Post.Attachment(
-            url = attachmentUrl,
-            description = attachmentDescription.orEmpty(),
-            type = attachmentType.orEmpty()
-        )
     )
 
     companion object {
-        fun fromDto(dto: Post): PostEntity = PostEntity(
+        fun fromDto(dto: Post, visible: Boolean = true): PostEntity = PostEntity(
             id = dto.id,
             author = dto.author,
             content = dto.content,
-            published = dto.published,
+
+            published = dto.published.toLongOrNull() ?: (System.currentTimeMillis() / 1000),
+
             likedByMe = dto.likedByMe,
             likes = dto.likes,
             shares = dto.shares,
             views = dto.views,
             video = dto.video,
-            authorAvatar = dto.authorAvatar,
-            attachmentUrl = dto.attachment?.url,
-            attachmentDescription = dto.attachment?.description,
-            attachmentType = dto.attachment?.type,
+            visible = visible,
         )
     }
 }

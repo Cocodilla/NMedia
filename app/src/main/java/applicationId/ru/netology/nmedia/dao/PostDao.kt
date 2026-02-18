@@ -10,29 +10,32 @@ import applicationId.ru.netology.nmedia.entity.PostEntity
 @Dao
 interface PostDao {
 
-    @Query("SELECT * FROM posts ORDER BY id DESC")
-    fun getAll(): Flow<List<PostEntity>>
+    // показываем только visible = 1
+    @Query("SELECT * FROM PostEntity WHERE visible = 1 ORDER BY id DESC")
+    fun getVisible(): Flow<List<PostEntity>>
 
-    @Query("SELECT * FROM posts WHERE id = :id LIMIT 1")
-    suspend fun getById(id: Long): PostEntity?
+    // сколько скрытых постов
+    @Query("SELECT COUNT(*) FROM PostEntity WHERE visible = 0")
+    fun countHidden(): Flow<Int>
+
+    // сделать все скрытые — видимыми
+    @Query("UPDATE PostEntity SET visible = 1 WHERE visible = 0")
+    suspend fun showAllHidden()
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(posts: List<PostEntity>)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(post: PostEntity)
+    @Query("SELECT MAX(id) FROM PostEntity")
+    suspend fun maxId(): Long?
 
-    @Query("DELETE FROM posts WHERE id = :id")
+    @Query("DELETE FROM PostEntity WHERE id = :id")
     suspend fun removeById(id: Long)
 
     @Query("""
-        UPDATE posts SET
-            likedByMe = CASE WHEN likedByMe THEN 0 ELSE 1 END,
-            likes = CASE WHEN likedByMe THEN MAX(likes - 1, 0) ELSE likes + 1 END
+        UPDATE PostEntity SET
+        likedByMe = CASE WHEN likedByMe THEN 0 ELSE 1 END,
+        likes = CASE WHEN likedByMe THEN likes - 1 ELSE likes + 1 END
         WHERE id = :id
     """)
-    suspend fun toggleLikeById(id: Long)
-
-    @Query("DELETE FROM posts")
-    suspend fun clear()
+    suspend fun likeById(id: Long)
 }

@@ -26,7 +26,7 @@ class FeedFragment : Fragment() {
     private var _binding: FragmentFeedBinding? = null
     private val binding get() = _binding!!
 
-    // чтобы snackbar не показывался бесконечно на одно и то же состояние (например, после поворота)
+    // чтобы snackbar не показывался бесконечно на одно и то же состояние
     private var lastErrorMessage: String? = null
 
     private val viewModel: PostViewModel by activityViewModels {
@@ -59,6 +59,7 @@ class FeedFragment : Fragment() {
         setupSwipeRefresh()
         setupObservers()
         setupClickListeners()
+
     }
 
     private fun setupRecyclerView() {
@@ -98,6 +99,16 @@ class FeedFragment : Fragment() {
             adapter.submitList(posts)
         }
 
+        // ✅ Новые посты: показываем/скрываем плашку
+        viewModel.newerCount.observe(viewLifecycleOwner) { count ->
+            if (count > 0) {
+                binding.newerCard.visibility = View.VISIBLE
+                binding.newerText.text = getString(R.string.newer_posts_count, count)
+            } else {
+                binding.newerCard.visibility = View.GONE
+            }
+        }
+
         viewModel.state.observe(viewLifecycleOwner) { state ->
             binding.swipeRefresh.isRefreshing = state.loading
 
@@ -117,6 +128,18 @@ class FeedFragment : Fragment() {
     private fun setupClickListeners() {
         binding.add.setOnClickListener {
             findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
+        }
+
+        // ✅ "Показать" новые посты
+        binding.newerShow.setOnClickListener {
+            viewModel.showNewer()
+            binding.list.smoothScrollToPosition(0)
+        }
+
+        // можно сделать кликабельной всю карточку
+        binding.newerCard.setOnClickListener {
+            viewModel.showNewer()
+            binding.list.smoothScrollToPosition(0)
         }
     }
 

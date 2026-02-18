@@ -47,5 +47,9 @@
     <string name="playButton" translatable="false">TODO</string>
     <string name="attachment_image">Attachment image</string>
     <string name="error_unknown">Ошибка</string>
+    <string name="newposts">Новые посты</string>
+    <string name="show">Показать</string>
+    <string name="add_post">Добавить пост</string>
+    <string name="newer_posts_count">Новые посты</string>
 
 </resources>

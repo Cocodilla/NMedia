@@ -5,8 +5,11 @@ import kotlinx.coroutines.flow.Flow
 
 interface PostRepository {
     val data: Flow<List<Post>>
+    val newerCount: Flow<Int>
 
     suspend fun refresh()
+    suspend fun getNewer()
+    suspend fun showNewer()
 
     suspend fun save(content: String)
     suspend fun editById(id: Long, content: String)

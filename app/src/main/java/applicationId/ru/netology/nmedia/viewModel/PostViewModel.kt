@@ -16,6 +16,7 @@ class PostViewModel(
 ) : ViewModel() {
 
     val data: LiveData<List<Post>> = repository.data.asLiveData()
+    val newerCount: LiveData<Int> = repository.newerCount.asLiveData()
 
     private val _state = MutableLiveData(FeedState())
     val state: LiveData<FeedState> = _state
@@ -26,21 +27,32 @@ class PostViewModel(
         loadPosts()
     }
 
-    fun loadPosts() = runAction({ repository.refresh() })
+    // ------------------------
+    // LOAD
+    // ------------------------
+    fun loadPosts() = runAction { repository.refresh() }
 
-    fun save(content: String) = runAction({ repository.save(content) })
+    // ------------------------
+    // LIKE / REMOVE
+    // ------------------------
+    fun likeById(id: Long) = runAction { repository.likeById(id) }
 
-    fun edit(id: Long, content: String) = runAction({ repository.editById(id, content) })
+    fun removeById(id: Long) = runAction { repository.removeById(id) }
 
-    fun likeById(id: Long) = runAction({ repository.likeById(id) })
+    fun save(content: String) = runAction {
+        repository.save(content)
+    }
 
-    fun removeById(id: Long) = runAction({ repository.removeById(id) })
+    fun edit(id: Long, content: String) = runAction {
+        repository.editById(id, content)
+    }
+
+    fun showNewer() = runAction { repository.showNewer() }
 
     fun retry() {
         val action = lastAction ?: return
         runAction(action)
     }
-
 
     private fun runAction(action: suspend () -> Unit) {
         lastAction = action
