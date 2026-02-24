@@ -8,7 +8,7 @@ import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import applicationId.ru.netology.nmedia.R
@@ -21,10 +21,7 @@ class PostFragment : Fragment() {
     private var _binding: FragmentPostBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: PostViewModel by lazy {
-        ViewModelProvider(requireActivity())[PostViewModel::class.java]
-    }
-
+    private val viewModel: PostViewModel by activityViewModels()
     private val args: PostFragmentArgs by navArgs()
 
     override fun onCreateView(
@@ -74,7 +71,6 @@ class PostFragment : Fragment() {
             )
 
             like.setOnClickListener {
-                // ✅ ВОТ ЭТА СТРОКА ИСПРАВЛЕНА
                 viewModel.likeById(post.id)
             }
 

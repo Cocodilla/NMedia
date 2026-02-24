@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.databinding.CardPostBinding
+import applicationId.ru.netology.nmedia.dto.Attachment
 import applicationId.ru.netology.nmedia.dto.Post
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
@@ -72,39 +73,35 @@ class PostAdapter(
             share.text = post.shares.toString()
             views.text = post.views.toString()
 
-            // --- Video ---
             videoGroup.visibility = if (post.video.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-            // --- Avatar (circle) ---
             val avatarUrl = post.authorAvatar?.let { fileName ->
                 "${BASE_URL}avatars/$fileName"
             }
 
             Glide.with(avatar)
                 .load(avatarUrl)
-                .timeout(10_000) // сервер тормозит
+                .timeout(10_000)
                 .circleCrop()
                 .transition(DrawableTransitionOptions.withCrossFade())
                 .placeholder(R.drawable.ic_avatar_placeholder)
                 .error(R.drawable.ic_avatar_placeholder)
                 .into(avatar)
 
-            // --- Attachment IMAGE ---
             val attachment = post.attachment
-            if (attachment != null && attachment.type.equals("IMAGE", ignoreCase = true)) {
+            if (attachment != null && attachment.type == Attachment.AttachmentType.IMAGE) {
                 attachmentGroup.visibility = View.VISIBLE
 
                 val imageUrl = "${BASE_URL}images/${attachment.url}"
                 Glide.with(attachmentImage)
                     .load(imageUrl)
-                    .timeout(10_000) // сервер тормозит
+                    .timeout(10_000)
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .placeholder(R.drawable.ic_image_placeholder)
                     .error(R.drawable.ic_image_placeholder)
                     .into(attachmentImage)
             } else {
                 attachmentGroup.visibility = View.GONE
-                // чтобы не мигало старое изображение при реюзе холдера
                 Glide.with(attachmentImage).clear(attachmentImage)
             }
         }
@@ -144,7 +141,6 @@ class PostAdapter(
     }
 
     private companion object {
-        // baseUrl ДОЛЖЕН заканчиваться на /
         private const val BASE_URL = "http://10.0.2.2:9999/"
     }
 }

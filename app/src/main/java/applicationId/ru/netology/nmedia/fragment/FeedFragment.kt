@@ -8,16 +8,12 @@ import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import applicationId.ru.netology.nmedia.App
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.adapter.PostAdapter
 import applicationId.ru.netology.nmedia.databinding.FragmentFeedBinding
 import applicationId.ru.netology.nmedia.dto.Post
-import applicationId.ru.netology.nmedia.repository.PostRepositoryImpl
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
 import com.google.android.material.snackbar.Snackbar
 
@@ -26,20 +22,9 @@ class FeedFragment : Fragment() {
     private var _binding: FragmentFeedBinding? = null
     private val binding get() = _binding!!
 
-    // чтобы snackbar не показывался бесконечно на одно и то же состояние
     private var lastErrorMessage: String? = null
 
-    private val viewModel: PostViewModel by activityViewModels {
-        object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val app = requireActivity().application as App
-                val dao = app.db.postDao()
-                val repo = PostRepositoryImpl(dao)
-                return PostViewModel(repo) as T
-            }
-        }
-    }
+    private val viewModel: PostViewModel by activityViewModels()
 
     private lateinit var adapter: PostAdapter
 
@@ -59,7 +44,6 @@ class FeedFragment : Fragment() {
         setupSwipeRefresh()
         setupObservers()
         setupClickListeners()
-
     }
 
     private fun setupRecyclerView() {
@@ -67,14 +51,11 @@ class FeedFragment : Fragment() {
             override fun onLike(post: Post) = viewModel.likeById(post.id)
             override fun onShare(post: Post) = sharePost(post.content)
             override fun onRemove(post: Post) = viewModel.removeById(post.id)
-
             override fun onEdit(post: Post) {
                 val action = FeedFragmentDirections.actionFeedFragmentToNewPostFragment(post)
                 findNavController().navigate(action)
             }
-
             override fun onVideoPlay(post: Post) = playVideo(post.video)
-
             override fun onPostClick(post: Post) {
                 val action = FeedFragmentDirections.actionFeedFragmentToPostFragment(post.id)
                 findNavController().navigate(action)
@@ -99,11 +80,12 @@ class FeedFragment : Fragment() {
             adapter.submitList(posts)
         }
 
-        // ✅ Новые посты: показываем/скрываем плашку
         viewModel.newerCount.observe(viewLifecycleOwner) { count ->
             if (count > 0) {
                 binding.newerCard.visibility = View.VISIBLE
-                binding.newerText.text = getString(R.string.newer_posts_count, count)
+                binding.newerText.text = resources.getQuantityString(
+                    R.plurals.newer_posts_count, count, count
+                )
             } else {
                 binding.newerCard.visibility = View.GONE
             }
@@ -115,7 +97,6 @@ class FeedFragment : Fragment() {
             val err = state.error ?: return@observe
             val msg = err.message ?: getString(R.string.error_unknown)
 
-            // не показываем один и тот же snackbar повторно
             if (lastErrorMessage == msg) return@observe
             lastErrorMessage = msg
 
@@ -130,13 +111,11 @@ class FeedFragment : Fragment() {
             findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
         }
 
-        // ✅ "Показать" новые посты
         binding.newerShow.setOnClickListener {
             viewModel.showNewer()
             binding.list.smoothScrollToPosition(0)
         }
 
-        // можно сделать кликабельной всю карточку
         binding.newerCard.setOnClickListener {
             viewModel.showNewer()
             binding.list.smoothScrollToPosition(0)

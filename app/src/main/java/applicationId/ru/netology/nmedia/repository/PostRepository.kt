@@ -8,12 +8,10 @@ interface PostRepository {
     val newerCount: Flow<Int>
 
     suspend fun refresh()
-    suspend fun getNewer()
-    suspend fun showNewer()
-
-    suspend fun save(content: String)
-    suspend fun editById(id: Long, content: String)
-
     suspend fun likeById(id: Long)
     suspend fun removeById(id: Long)
+    suspend fun save(content: String)
+    suspend fun edit(id: Long, content: String)
+    suspend fun getNewer()
+    suspend fun showNewer()
 }

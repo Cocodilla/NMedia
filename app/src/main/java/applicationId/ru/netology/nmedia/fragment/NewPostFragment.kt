@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import applicationId.ru.netology.nmedia.databinding.FragmentNewPostBinding
@@ -17,9 +17,7 @@ class NewPostFragment : Fragment() {
     private var _binding: FragmentNewPostBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: PostViewModel by lazy {
-        ViewModelProvider(requireActivity())[PostViewModel::class.java]
-    }
+    private val viewModel: PostViewModel by activityViewModels()
 
     private val args: NewPostFragmentArgs by navArgs()
     private var editingPost: Post? = null
@@ -36,7 +34,7 @@ class NewPostFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        editingPost = args.post // nullable
+        editingPost = args.post
 
         editingPost?.let { post ->
             binding.editingTitle.visibility = View.VISIBLE
@@ -53,9 +51,11 @@ class NewPostFragment : Fragment() {
             val content = binding.content.text.toString().trim()
             if (content.isEmpty()) return@setOnClickListener
 
-            val post = editingPost
-            if (post == null) viewModel.save(content)
-            else viewModel.edit(post.id, content)
+            if (editingPost == null) {
+                viewModel.save(content)
+            } else {
+                viewModel.edit(editingPost!!.id, content)
+            }
 
             findNavController().navigateUp()
         }

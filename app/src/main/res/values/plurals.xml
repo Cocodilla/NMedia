@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <plurals name="new_posts" translatable="false">
+    <plurals name="newer_posts_count" translatable="false">
         <item quantity="one">%d новый пост</item>
         <item quantity="few">%d новых поста</item>
         <item quantity="many">%d новых постов</item>
         <item quantity="other">%d новых постов</item>
     </plurals>
-
-    </resources>
+</resources>
