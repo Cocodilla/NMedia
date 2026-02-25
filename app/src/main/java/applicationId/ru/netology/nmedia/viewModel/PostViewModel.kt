@@ -5,8 +5,9 @@ import applicationId.ru.netology.nmedia.error.AppError
 import applicationId.ru.netology.nmedia.error.UnknownError
 import applicationId.ru.netology.nmedia.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -40,17 +41,27 @@ class PostViewModel @Inject constructor(
         runAction(action)
     }
 
+
     private fun startNewerPolling() {
-        viewModelScope.launch {
-            while (isActive) {
+        flow {
+            while (true) {
+                delay(10_000) // интервал опроса
+                emit(Unit)
+            }
+        }
+            .onStart { emit(Unit) }
+            .flowOn(Dispatchers.IO)
+            .catch { e ->
+
+            }
+            .onEach {
                 try {
                     repository.getNewer()
                 } catch (e: Exception) {
-                    // ignore polling errors
+
                 }
-                delay(10_000)
             }
-        }
+            .launchIn(viewModelScope)
     }
 
     private fun runAction(action: suspend () -> Unit) {
