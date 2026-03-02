@@ -5,7 +5,7 @@ data class PostApiModel(
     val author: String,
     val authorAvatar: String? = null,
     val content: String,
-    val published: Long, // seconds (unix time)
+    val published: Long, // unix seconds
     val likedByMe: Boolean = false,
     val likes: Int = 0,
     val shares: Int = 0,
@@ -14,13 +14,7 @@ data class PostApiModel(
     val attachment: AttachmentApiModel? = null
 )
 
-data class AttachmentApiModel(
-    val url: String,
-    val description: String,
-    val type: String
-)
-
-/* ---------- API -> UI ---------- */
+// API -> UI
 fun PostApiModel.toUi(): Post = Post(
     id = id,
     author = author,
@@ -41,10 +35,10 @@ fun PostApiModel.toUi(): Post = Post(
     }
 )
 
-/* ---------- UI -> API (save/edit) ---------- */
+// UI -> API (save/edit)
 fun Post.toApiForSave(): PostApiModel = PostApiModel(
-    id = if (id == 0L) 0L else id,
-    author = author.ifBlank { "Me" },
+    id = id,
+    author = author,
     authorAvatar = authorAvatar,
     content = content,
     published = if (id == 0L) 0L else publishedTimestamp,

@@ -5,7 +5,6 @@ import applicationId.ru.netology.nmedia.error.AppError
 import applicationId.ru.netology.nmedia.error.UnknownError
 import applicationId.ru.netology.nmedia.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -37,31 +36,20 @@ class PostViewModel @Inject constructor(
     fun showNewer() = runAction { repository.showNewer() }
 
     fun retry() {
-        val action = lastAction ?: return
-        runAction(action)
+        lastAction?.let { runAction(it) }
     }
 
-
     private fun startNewerPolling() {
-        flow {
+        viewModelScope.launch {
             while (true) {
-                delay(10_000) // интервал опроса
-                emit(Unit)
-            }
-        }
-            .onStart { emit(Unit) }
-            .flowOn(Dispatchers.IO)
-            .catch { e ->
-
-            }
-            .onEach {
+                delay(10_000)
                 try {
                     repository.getNewer()
                 } catch (e: Exception) {
-
+                    // игнорируем ошибки при опросе
                 }
             }
-            .launchIn(viewModelScope)
+        }
     }
 
     private fun runAction(action: suspend () -> Unit) {

@@ -1,33 +1,32 @@
 plugins {
-    id "com.android.application"
-    id "org.jetbrains.kotlin.android"
-
-    id "kotlin-parcelize"
-    id "androidx.navigation.safeargs.kotlin"
-    id "com.google.gms.google-services"
-
-    id "com.google.devtools.ksp"
-    id "kotlin-kapt"
-    id "com.google.dagger.hilt.android"
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("kotlin-parcelize")
+    id("androidx.navigation.safeargs.kotlin")
+    id("com.google.gms.google-services")
+    id("com.google.devtools.ksp")
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
-    namespace "applicationId.ru.netology.nmedia"
-    compileSdk 34
+    namespace = "applicationId.ru.netology.nmedia"
+    compileSdk = 34
 
     defaultConfig {
-        applicationId "applicationId.ru.netology.nmedia"
-        minSdk 24
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        applicationId = "applicationId.ru.netology.nmedia"
+        minSdk = 24
+        targetSdk = 34
+        versionCode = 1
+        versionName = "1.0"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 
@@ -36,58 +35,62 @@ android {
         targetCompatibility JavaVersion.VERSION_17
         coreLibraryDesugaringEnabled true
     }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 
-    kotlinOptions { jvmTarget = "17" }
-
-    buildFeatures { viewBinding true }
+    buildFeatures {
+        viewBinding = true
+    }
 }
 
 dependencies {
-    implementation libs.material
-    implementation libs.androidx.core.ktx
-    implementation libs.androidx.appcompat
-    implementation libs.androidx.constraintlayout
-    implementation libs.androidx.coordinatorlayout
-    implementation libs.androidx.cardview
-    implementation libs.androidx.recyclerview
-    implementation libs.androidx.swiperefreshlayout
+    implementation(libs.material)
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.coordinatorlayout)
+    implementation(libs.androidx.cardview)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.swiperefreshlayout)
 
-    implementation libs.androidx.navigation.fragment.ktx
-    implementation libs.androidx.navigation.ui.ktx
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
 
-    implementation libs.androidx.lifecycle.viewmodel.ktx
-    implementation libs.androidx.lifecycle.livedata.ktx
-    implementation libs.androidx.activity.ktx
-    implementation libs.androidx.fragment.ktx
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.fragment.ktx)
 
-    implementation libs.gson
+    implementation(libs.gson)
+    implementation(libs.play.services.base)
 
-    coreLibraryDesugaring libs.desugar.jdk.libs
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
-    implementation platform(libs.firebase.bom)
-    implementation libs.firebase.messaging
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
 
-    implementation libs.okhttp
-    implementation libs.okhttp.logging
-    implementation libs.retrofit
-    implementation libs.retrofit.gson
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
 
-    implementation libs.glide
-    kapt libs.glide.compiler
+    implementation(libs.glide)
+    kapt(libs.glide.compiler)
 
-    implementation libs.room.runtime
-    implementation libs.room.ktx
-    ksp libs.room.compiler
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
-    implementation libs.hilt.android
-    kapt libs.hilt.compiler
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
 
-    implementation libs.androidx.hilt.navigation.fragment
-    kapt libs.androidx.hilt.compiler
+    implementation(libs.androidx.hilt.navigation.fragment)
+    kapt(libs.androidx.hilt.compiler)
 
-    testImplementation libs.junit
-    androidTestImplementation libs.androidx.junit
-    androidTestImplementation libs.androidx.espresso.core
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
 }
 
 kapt {

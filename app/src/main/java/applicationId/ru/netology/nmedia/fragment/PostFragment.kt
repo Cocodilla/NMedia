@@ -20,7 +20,6 @@ class PostFragment : Fragment() {
 
     private var _binding: FragmentPostBinding? = null
     private val binding get() = _binding!!
-
     private val viewModel: PostViewModel by activityViewModels()
     private val args: PostFragmentArgs by navArgs()
 

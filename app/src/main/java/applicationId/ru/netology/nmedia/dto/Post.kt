@@ -13,7 +13,7 @@ data class Post(
     val id: Long,
     val author: String,
     val content: String,
-    val publishedTimestamp: Long,  // unix seconds
+    val publishedTimestamp: Long, // unix seconds
     val likedByMe: Boolean = false,
     val likes: Int = 0,
     val shares: Int = 0,
@@ -35,10 +35,8 @@ data class Post(
             val zone = ZoneId.systemDefault()
             val dt = Instant.ofEpochSecond(seconds).atZone(zone)
             val date = dt.toLocalDate()
-
             val today = LocalDate.now(zone)
             val yesterday = today.minusDays(1)
-
             return when {
                 date == today -> "сегодня в ${dt.format(timeFmt)}"
                 date == yesterday -> "вчера в ${dt.format(timeFmt)}"

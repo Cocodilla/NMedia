@@ -33,33 +33,34 @@ class PostAdapter(
 
         init {
             binding.root.setOnClickListener {
-                val post = getItem(bindingAdapterPositionSafe()) ?: return@setOnClickListener
-                interactionListener.onPostClick(post)
+                getItem(bindingAdapterPositionSafe())?.let { post ->
+                    interactionListener.onPostClick(post)
+                }
             }
-
             binding.like.setOnClickListener {
-                val post = getItem(bindingAdapterPositionSafe()) ?: return@setOnClickListener
-                interactionListener.onLike(post)
+                getItem(bindingAdapterPositionSafe())?.let { post ->
+                    interactionListener.onLike(post)
+                }
             }
-
             binding.share.setOnClickListener {
-                val post = getItem(bindingAdapterPositionSafe()) ?: return@setOnClickListener
-                interactionListener.onShare(post)
+                getItem(bindingAdapterPositionSafe())?.let { post ->
+                    interactionListener.onShare(post)
+                }
             }
-
             binding.menu.setOnClickListener { v ->
-                val post = getItem(bindingAdapterPositionSafe()) ?: return@setOnClickListener
-                showMenu(post, v)
+                getItem(bindingAdapterPositionSafe())?.let { post ->
+                    showMenu(post, v)
+                }
             }
-
             binding.videoGroup.setOnClickListener {
-                val post = getItem(bindingAdapterPositionSafe()) ?: return@setOnClickListener
-                if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
+                getItem(bindingAdapterPositionSafe())?.let { post ->
+                    if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
+                }
             }
-
             binding.playButton.setOnClickListener {
-                val post = getItem(bindingAdapterPositionSafe()) ?: return@setOnClickListener
-                if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
+                getItem(bindingAdapterPositionSafe())?.let { post ->
+                    if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
+                }
             }
         }
 
@@ -75,10 +76,10 @@ class PostAdapter(
 
             videoGroup.visibility = if (post.video.isNullOrEmpty()) View.GONE else View.VISIBLE
 
+            // Avatar
             val avatarUrl = post.authorAvatar?.let { fileName ->
                 "${BASE_URL}avatars/$fileName"
             }
-
             Glide.with(avatar)
                 .load(avatarUrl)
                 .timeout(10_000)
@@ -88,10 +89,10 @@ class PostAdapter(
                 .error(R.drawable.ic_avatar_placeholder)
                 .into(avatar)
 
+            // Attachment
             val attachment = post.attachment
             if (attachment != null && attachment.type == Attachment.AttachmentType.IMAGE) {
                 attachmentGroup.visibility = View.VISIBLE
-
                 val imageUrl = "${BASE_URL}images/${attachment.url}"
                 Glide.with(attachmentImage)
                     .load(imageUrl)

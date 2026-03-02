@@ -6,16 +6,17 @@ import applicationId.ru.netology.nmedia.dto.Post
 
 @Entity
 data class PostEntity(
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey
     val id: Long,
     val author: String,
     val content: String,
-    val published: Long,
+    val published: Long, // unix seconds
     val likedByMe: Boolean,
     val likes: Int,
     val shares: Int,
     val views: Int,
     val video: String? = null,
+    val authorAvatar: String? = null,
     val visible: Boolean = true,
 ) {
     fun toDto(): Post = Post(
@@ -28,8 +29,8 @@ data class PostEntity(
         shares = shares,
         views = views,
         video = video,
-        authorAvatar = null,
-        attachment = null
+        authorAvatar = authorAvatar,
+        attachment = null // в базе не храним, при необходимости можно добавить
     )
 
     companion object {
@@ -43,6 +44,7 @@ data class PostEntity(
             shares = dto.shares,
             views = dto.views,
             video = dto.video,
+            authorAvatar = dto.authorAvatar,
             visible = visible
         )
     }

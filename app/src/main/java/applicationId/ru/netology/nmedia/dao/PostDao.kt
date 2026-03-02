@@ -1,6 +1,8 @@
 package applicationId.ru.netology.nmedia.dao
 
-import androidx.room.*
+import androidx.room.Dao
+import androidx.room.Query
+import androidx.room.Upsert
 import applicationId.ru.netology.nmedia.entity.PostEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -9,6 +11,12 @@ interface PostDao {
 
     @Query("SELECT * FROM PostEntity WHERE visible = 1 ORDER BY id DESC")
     fun getVisible(): Flow<List<PostEntity>>
+
+    @Query("SELECT * FROM PostEntity WHERE id = :id LIMIT 1")
+    suspend fun getPostById(id: Long): PostEntity?
+
+    @Query("DELETE FROM PostEntity WHERE visible = 1")
+    suspend fun deleteAllVisible()
 
     @Query("SELECT COALESCE(MAX(id), 0) FROM PostEntity")
     suspend fun maxId(): Long
@@ -28,14 +36,8 @@ interface PostDao {
     @Query("DELETE FROM PostEntity WHERE id = :id")
     suspend fun removeById(id: Long)
 
-    @Query("DELETE FROM PostEntity WHERE visible = 1")
-    suspend fun deleteAllVisible()
-
-    @Query("SELECT * FROM PostEntity WHERE id = :id")
-    suspend fun getPostById(id: Long): PostEntity?
-
     @Query("""
-        UPDATE PostEntity SET
+        UPDATE PostEntity SET 
             likes = likes + CASE WHEN likedByMe THEN -1 ELSE 1 END,
             likedByMe = NOT likedByMe
         WHERE id = :id

@@ -9,13 +9,7 @@ interface PostsService {
     suspend fun getAll(): Response<List<PostApiModel>>
 
     @POST("api/posts")
-    suspend fun create(@Body post: PostApiModel): Response<PostApiModel>
-
-    @PUT("api/posts/{id}")
-    suspend fun update(@Path("id") id: Long, @Body post: PostApiModel): Response<PostApiModel>
-
-    @GET("api/posts/latest")
-    suspend fun getNewer(@Query("lastId") lastId: Long): Response<List<PostApiModel>>
+    suspend fun save(@Body post: PostApiModel): Response<PostApiModel>
 
     @POST("api/posts/{id}/likes")
     suspend fun likeById(@Path("id") id: Long): Response<PostApiModel>
@@ -25,4 +19,7 @@ interface PostsService {
 
     @DELETE("api/posts/{id}")
     suspend fun removeById(@Path("id") id: Long): Response<Unit>
+
+    @GET("api/posts/latest")
+    suspend fun getNewer(@Query("lastId") lastId: Long): Response<List<PostApiModel>>
 }

@@ -8,28 +8,48 @@ import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.databinding.ActivityMainBinding
+import com.google.android.gms.common.GoogleApiAvailability
+import com.google.firebase.messaging.FirebaseMessaging
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+    @Inject
+    lateinit var firebaseMessaging: FirebaseMessaging
+
+    @Inject
+    lateinit var googleApiAvailability: GoogleApiAvailability
+
     private lateinit var binding: ActivityMainBinding
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Устанавливаем MaterialToolbar как ActionBar
         setSupportActionBar(binding.toolbar)
 
-        // Получаем NavHostFragment и NavController
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         val navController = navHostFragment.navController
 
-        // Настройка ActionBar с навигацией
         val appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
+
+        // Используем внедрённые объекты
+        firebaseMessaging.token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Log.d("MainActivity", "FCM token: ${task.result}")
+            }
+        }
+
+        // Пример использования GoogleApiAvailability
+        val result = googleApiAvailability.isGooglePlayServicesAvailable(this)
+        if (result != com.google.android.gms.common.ConnectionResult.SUCCESS) {
+            // обработка ошибки
+        }
 
         Log.d("MainActivity", "onCreate called")
     }

@@ -3,7 +3,7 @@ package applicationId.ru.netology.nmedia.repository
 import applicationId.ru.netology.nmedia.dao.PostDao
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.dto.PostApiModel
-import applicationId.ru.netology.nmedia.dto.PostsApi
+import applicationId.ru.netology.nmedia.dto.PostsService
 import applicationId.ru.netology.nmedia.dto.toApiForSave
 import applicationId.ru.netology.nmedia.dto.toUi
 import applicationId.ru.netology.nmedia.entity.PostEntity
@@ -19,47 +19,41 @@ import javax.inject.Singleton
 @Singleton
 class PostRepositoryImpl @Inject constructor(
     private val dao: PostDao,
-    private val api: PostsApi
+    private val service: PostsService
 ) : PostRepository {
 
     override val data: Flow<List<Post>> =
-        dao.getVisible().map { list -> list.map(PostEntity::toDto) }
+        dao.getVisible().map { entities -> entities.map(PostEntity::toDto) }
 
     override val newerCount: Flow<Int> = dao.countHidden()
 
     override suspend fun refresh() {
         try {
-            val response = api.service.getAll()
+            val response = service.getAll()
             if (!response.isSuccessful) throw ApiError(response.code(), response.message())
-
             val body = response.body() ?: throw ApiError(response.code(), response.message())
 
             dao.deleteAllVisible()
-            val entities = body.map { apiModel: PostApiModel ->
-                PostEntity.fromDto(apiModel.toUi(), visible = true)
-            }
+            val entities = body.map { PostEntity.fromDto(it.toUi(), visible = true) }
             dao.upsert(entities)
         } catch (e: IOException) {
             throw NetworkError
+        } catch (e: ApiError) {
+            throw e
         } catch (e: Exception) {
             throw UnknownError
         }
     }
 
     override suspend fun likeById(id: Long) {
-        val currentPost = dao.getPostById(id) ?: return
-        val newLikedByMe = !currentPost.likedByMe
+        val current = dao.getPostById(id) ?: return
+        val willLike = !current.likedByMe
 
         dao.toggleLikeLocal(id)
 
         try {
-            val response = if (newLikedByMe) {
-                api.service.likeById(id)
-            } else {
-                api.service.unlikeById(id)
-            }
+            val response = if (willLike) service.likeById(id) else service.unlikeById(id)
             if (!response.isSuccessful) throw ApiError(response.code(), response.message())
-
             val body = response.body() ?: throw ApiError(response.code(), response.message())
             dao.upsert(PostEntity.fromDto(body.toUi(), visible = true))
         } catch (e: Exception) {
@@ -73,14 +67,14 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun removeById(id: Long) {
-        val post = dao.getPostById(id)
+        val backup = dao.getPostById(id)
         dao.removeById(id)
 
         try {
-            val response = api.service.removeById(id)
+            val response = service.removeById(id)
             if (!response.isSuccessful) throw ApiError(response.code(), response.message())
         } catch (e: Exception) {
-            post?.let { dao.upsert(it) }
+            backup?.let { dao.upsert(it) }
             when (e) {
                 is IOException -> throw NetworkError
                 is ApiError -> throw e
@@ -90,27 +84,29 @@ class PostRepositoryImpl @Inject constructor(
     }
 
     override suspend fun save(content: String) {
-        val post = PostApiModel(
+        val post = Post(
             id = 0L,
-            author = "",
-            authorAvatar = null,
+            author = "Me",
             content = content,
-            published = 0L,
+            publishedTimestamp = 0L,
             likedByMe = false,
             likes = 0,
             shares = 0,
             views = 0,
             video = null,
+            authorAvatar = null,
             attachment = null
         )
+        val apiModel = post.toApiForSave()
         try {
-            val response = api.service.create(post)
+            val response = service.save(apiModel)
             if (!response.isSuccessful) throw ApiError(response.code(), response.message())
-
             val body = response.body() ?: throw ApiError(response.code(), response.message())
             dao.upsert(PostEntity.fromDto(body.toUi(), visible = true))
         } catch (e: IOException) {
             throw NetworkError
+        } catch (e: ApiError) {
+            throw e
         } catch (e: Exception) {
             throw UnknownError
         }
@@ -118,17 +114,17 @@ class PostRepositoryImpl @Inject constructor(
 
     override suspend fun edit(id: Long, content: String) {
         val existing = dao.getPostById(id)?.toDto() ?: return
-        val updatedPost = existing.copy(content = content)
-        val apiModel = updatedPost.toApiForSave()
-
+        val updated = existing.copy(content = content)
+        val apiModel = updated.toApiForSave()
         try {
-            val response = api.service.update(id, apiModel)
+            val response = service.save(apiModel)
             if (!response.isSuccessful) throw ApiError(response.code(), response.message())
-
             val body = response.body() ?: throw ApiError(response.code(), response.message())
             dao.upsert(PostEntity.fromDto(body.toUi(), visible = true))
         } catch (e: IOException) {
             throw NetworkError
+        } catch (e: ApiError) {
+            throw e
         } catch (e: Exception) {
             throw UnknownError
         }
@@ -137,18 +133,16 @@ class PostRepositoryImpl @Inject constructor(
     override suspend fun getNewer() {
         try {
             val lastId = dao.maxId()
-            val response = api.service.getNewer(lastId)
+            val response = service.getNewer(lastId)
             if (!response.isSuccessful) throw ApiError(response.code(), response.message())
-
             val body = response.body() ?: throw ApiError(response.code(), response.message())
             if (body.isEmpty()) return
-
-            val entities = body.map { apiModel: PostApiModel ->
-                PostEntity.fromDto(apiModel.toUi(), visible = false)
-            }
+            val entities = body.map { PostEntity.fromDto(it.toUi(), visible = false) }
             dao.upsert(entities)
         } catch (e: IOException) {
             throw NetworkError
+        } catch (e: ApiError) {
+            throw e
         } catch (e: Exception) {
             throw UnknownError
         }

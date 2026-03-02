@@ -16,16 +16,15 @@ import applicationId.ru.netology.nmedia.databinding.FragmentFeedBinding
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class FeedFragment : Fragment() {
 
+    private val viewModel: PostViewModel by activityViewModels()
     private var _binding: FragmentFeedBinding? = null
     private val binding get() = _binding!!
-
     private var lastErrorMessage: String? = null
-
-    private val viewModel: PostViewModel by activityViewModels()
-
     private lateinit var adapter: PostAdapter
 
     override fun onCreateView(
@@ -39,7 +38,6 @@ class FeedFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         setupSwipeRefresh()
         setupObservers()
