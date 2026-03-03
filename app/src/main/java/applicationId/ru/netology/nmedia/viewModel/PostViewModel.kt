@@ -1,18 +1,25 @@
 package applicationId.ru.netology.nmedia.viewModel
 
 import androidx.lifecycle.*
+import applicationId.ru.netology.nmedia.auth.AuthRepository
 import applicationId.ru.netology.nmedia.error.AppError
 import applicationId.ru.netology.nmedia.error.UnknownError
 import applicationId.ru.netology.nmedia.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class FeedState(
+    val loading: Boolean = false,
+    val error: AppError? = null
+)
+
 @HiltViewModel
 class PostViewModel @Inject constructor(
-    private val repository: PostRepository
+    private val repository: PostRepository,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     val data = repository.data.asLiveData()
@@ -24,7 +31,19 @@ class PostViewModel @Inject constructor(
     private var lastAction: (suspend () -> Unit)? = null
 
     init {
+        // Первоначальная загрузка
         loadPosts()
+
+        // Следим за изменениями статуса аутентификации
+        viewModelScope.launch {
+            authRepository.authState
+                .distinctUntilChanged()
+                .collect { authState ->
+                    // При любом изменении (логин/логаут) перезагружаем данные с сервера
+                    loadPosts()
+                }
+        }
+
         startNewerPolling()
     }
 
@@ -67,8 +86,3 @@ class PostViewModel @Inject constructor(
         }
     }
 }
-
-data class FeedState(
-    val loading: Boolean = false,
-    val error: AppError? = null
-)
