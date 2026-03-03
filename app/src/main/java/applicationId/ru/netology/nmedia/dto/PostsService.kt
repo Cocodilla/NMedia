@@ -5,8 +5,14 @@ import retrofit2.http.*
 
 interface PostsService {
 
-    @GET("api/posts")
-    suspend fun getAll(): Response<List<PostApiModel>>
+    @GET("api/posts/latest")
+    suspend fun getLatest(@Query("count") count: Int): Response<List<PostApiModel>>
+
+    @GET("api/posts/{id}/before")
+    suspend fun getBefore(
+        @Path("id") id: Long,
+        @Query("count") count: Int
+    ): Response<List<PostApiModel>>
 
     @POST("api/posts")
     suspend fun save(@Body post: PostApiModel): Response<PostApiModel>
@@ -19,7 +25,4 @@ interface PostsService {
 
     @DELETE("api/posts/{id}")
     suspend fun removeById(@Path("id") id: Long): Response<Unit>
-
-    @GET("api/posts/latest")
-    suspend fun getNewer(@Query("lastId") lastId: Long): Response<List<PostApiModel>>
 }

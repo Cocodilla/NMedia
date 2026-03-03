@@ -16,15 +16,14 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideAppDb(@ApplicationContext context: Context): AppDb {
-        return Room.databaseBuilder(
-            context,
-            AppDb::class.java,
-            "app.db"
-        ).build()
-    }
+    fun provideAppDb(@ApplicationContext context: Context): AppDb =
+        Room.databaseBuilder(context, AppDb::class.java, "app.db").build()
 
     @Provides
     @Singleton
     fun providePostDao(appDb: AppDb) = appDb.postDao()
+
+    @Provides
+    @Singleton
+    fun providePostRemoteKeyDao(appDb: AppDb) = appDb.postRemoteKeyDao()
 }

@@ -4,8 +4,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.PopupMenu
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.databinding.CardPostBinding
@@ -16,7 +16,7 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 
 class PostAdapter(
     private val interactionListener: OnInteractionListener
-) : ListAdapter<Post, PostAdapter.ViewHolder>(PostDiffCallback()) {
+) : PagingDataAdapter<Post, PostAdapter.ViewHolder>(PostDiffCallback()) {
 
     interface OnInteractionListener {
         fun onLike(post: Post)
@@ -33,32 +33,24 @@ class PostAdapter(
 
         init {
             binding.root.setOnClickListener {
-                getItem(bindingAdapterPositionSafe())?.let { post ->
-                    interactionListener.onPostClick(post)
-                }
+                getItem(bindingAdapterPosition)?.let(interactionListener::onPostClick)
             }
             binding.like.setOnClickListener {
-                getItem(bindingAdapterPositionSafe())?.let { post ->
-                    interactionListener.onLike(post)
-                }
+                getItem(bindingAdapterPosition)?.let(interactionListener::onLike)
             }
             binding.share.setOnClickListener {
-                getItem(bindingAdapterPositionSafe())?.let { post ->
-                    interactionListener.onShare(post)
-                }
+                getItem(bindingAdapterPosition)?.let(interactionListener::onShare)
             }
             binding.menu.setOnClickListener { v ->
-                getItem(bindingAdapterPositionSafe())?.let { post ->
-                    showMenu(post, v)
-                }
+                getItem(bindingAdapterPosition)?.let { post -> showMenu(post, v) }
             }
             binding.videoGroup.setOnClickListener {
-                getItem(bindingAdapterPositionSafe())?.let { post ->
+                getItem(bindingAdapterPosition)?.let { post ->
                     if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
                 }
             }
             binding.playButton.setOnClickListener {
-                getItem(bindingAdapterPositionSafe())?.let { post ->
+                getItem(bindingAdapterPosition)?.let { post ->
                     if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
                 }
             }
@@ -76,10 +68,10 @@ class PostAdapter(
 
             videoGroup.visibility = if (post.video.isNullOrEmpty()) View.GONE else View.VISIBLE
 
-            // Avatar
             val avatarUrl = post.authorAvatar?.let { fileName ->
                 "${BASE_URL}avatars/$fileName"
             }
+
             Glide.with(avatar)
                 .load(avatarUrl)
                 .timeout(10_000)
@@ -89,7 +81,6 @@ class PostAdapter(
                 .error(R.drawable.ic_avatar_placeholder)
                 .into(avatar)
 
-            // Attachment
             val attachment = post.attachment
             if (attachment != null && attachment.type == Attachment.AttachmentType.IMAGE) {
                 attachmentGroup.visibility = View.VISIBLE
@@ -125,11 +116,6 @@ class PostAdapter(
                 }
             }.show()
         }
-
-        private fun bindingAdapterPositionSafe(): Int {
-            val pos = bindingAdapterPosition
-            return if (pos == RecyclerView.NO_POSITION) -1 else pos
-        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -138,7 +124,7 @@ class PostAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        getItem(position)?.let(holder::bind)
     }
 
     private companion object {
@@ -147,9 +133,6 @@ class PostAdapter(
 }
 
 class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
-    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean =
-        oldItem.id == newItem.id
-
-    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean =
-        oldItem == newItem
+    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean = oldItem.id == newItem.id
+    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean = oldItem == newItem
 }

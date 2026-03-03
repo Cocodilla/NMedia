@@ -64,6 +64,7 @@ dependencies {
 
     implementation(libs.gson)
     implementation(libs.play.services.base)
+    implementation libs.androidx.paging.common
 
     coreLibraryDesugaring(libs.desugar.jdk.libs)
 
@@ -76,7 +77,7 @@ dependencies {
     implementation(libs.retrofit.gson)
 
     implementation(libs.glide)
-    kapt(libs.glide.compiler)
+    ksp(libs.glide.compiler)
 
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
@@ -91,6 +92,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    // Paging 3
+    implementation(libs.paging.runtime)
+    implementation(libs.room.paging)
+
+    // DataStore (храним токен)
+    implementation(libs.datastore.preferences)
 }
 
 kapt {

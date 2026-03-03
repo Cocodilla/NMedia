@@ -1,5 +1,7 @@
 package applicationId.ru.netology.nmedia.di
 
+import applicationId.ru.netology.nmedia.auth.AuthInterceptor
+import applicationId.ru.netology.nmedia.dto.AuthService
 import applicationId.ru.netology.nmedia.dto.PostsService
 import dagger.Module
 import dagger.Provides
@@ -20,9 +22,12 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor
+    ): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
         return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor) // <-- токен в запросы
             .addInterceptor(logging)
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(15, TimeUnit.SECONDS)
@@ -43,4 +48,9 @@ object NetworkModule {
     @Singleton
     fun providePostsService(retrofit: Retrofit): PostsService =
         retrofit.create(PostsService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideAuthService(retrofit: Retrofit): AuthService =
+        retrofit.create(AuthService::class.java)
 }

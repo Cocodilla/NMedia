@@ -1,5 +1,6 @@
 package applicationId.ru.netology.nmedia.dao
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Upsert
@@ -9,23 +10,8 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface PostDao {
 
-    @Query("SELECT * FROM PostEntity WHERE visible = 1 ORDER BY id DESC")
-    fun getVisible(): Flow<List<PostEntity>>
-
-    @Query("SELECT * FROM PostEntity WHERE id = :id LIMIT 1")
-    suspend fun getPostById(id: Long): PostEntity?
-
-    @Query("DELETE FROM PostEntity WHERE visible = 1")
-    suspend fun deleteAllVisible()
-
-    @Query("SELECT COALESCE(MAX(id), 0) FROM PostEntity")
-    suspend fun maxId(): Long
-
-    @Query("SELECT COUNT(*) FROM PostEntity WHERE visible = 0")
-    fun countHidden(): Flow<Int>
-
-    @Query("UPDATE PostEntity SET visible = 1 WHERE visible = 0")
-    suspend fun showAll()
+    @Query("SELECT * FROM PostEntity ORDER BY id DESC")
+    fun pagingSource(): PagingSource<Int, PostEntity>
 
     @Upsert
     suspend fun upsert(posts: List<PostEntity>)
@@ -33,8 +19,20 @@ interface PostDao {
     @Upsert
     suspend fun upsert(post: PostEntity)
 
+    @Query("DELETE FROM PostEntity")
+    suspend fun clear()
+
+    @Query("SELECT MIN(id) FROM PostEntity")
+    suspend fun minId(): Long?
+
+    @Query("SELECT * FROM PostEntity WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Long): PostEntity?
+
     @Query("DELETE FROM PostEntity WHERE id = :id")
     suspend fun removeById(id: Long)
+
+    @Query("SELECT * FROM PostEntity WHERE id = :id LIMIT 1")
+    fun observeById(id: Long): Flow<PostEntity?>
 
     @Query("""
         UPDATE PostEntity SET 

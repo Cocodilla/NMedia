@@ -8,7 +8,11 @@ import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.adapter.PostAdapter
@@ -17,13 +21,17 @@ import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class FeedFragment : Fragment() {
 
     private val viewModel: PostViewModel by activityViewModels()
+
     private var _binding: FragmentFeedBinding? = null
     private val binding get() = _binding!!
+
     private var lastErrorMessage: String? = null
     private lateinit var adapter: PostAdapter
 
@@ -38,9 +46,10 @@ class FeedFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         setupRecyclerView()
         setupSwipeRefresh()
-        setupObservers()
+        setupPagingCollectors()
         setupClickListeners()
     }
 
@@ -69,54 +78,51 @@ class FeedFragment : Fragment() {
 
     private fun setupSwipeRefresh() {
         binding.swipeRefresh.setOnRefreshListener {
-            viewModel.loadPosts()
+            adapter.refresh()
         }
     }
 
-    private fun setupObservers() {
-        viewModel.data.observe(viewLifecycleOwner) { posts ->
-            adapter.submitList(posts)
-        }
+    private fun setupPagingCollectors() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-        viewModel.newerCount.observe(viewLifecycleOwner) { count ->
-            if (count > 0) {
-                binding.newerCard.visibility = View.VISIBLE
-                binding.newerText.text = resources.getQuantityString(
-                    R.plurals.newer_posts_count, count, count
-                )
-            } else {
-                binding.newerCard.visibility = View.GONE
+
+                launch {
+                    viewModel.data.collectLatest { pagingData ->
+                        adapter.submitData(pagingData)
+                    }
+                }
+
+                //  Состояния загрузки (прогресс/ошибка)
+                launch {
+                    adapter.loadStateFlow.collectLatest { state ->
+                        // Показываем "крутилку" только когда идет refresh
+                        binding.swipeRefresh.isRefreshing = state.refresh is LoadState.Loading
+
+                        // Ошибка может быть в refresh или append
+                        val errorState = when {
+                            state.refresh is LoadState.Error -> state.refresh as LoadState.Error
+                            state.append is LoadState.Error -> state.append as LoadState.Error
+                            state.prepend is LoadState.Error -> state.prepend as LoadState.Error
+                            else -> null
+                        } ?: return@collectLatest
+
+                        val msg = errorState.error.message ?: getString(R.string.error_unknown)
+                        if (lastErrorMessage == msg) return@collectLatest
+                        lastErrorMessage = msg
+
+                        Snackbar.make(binding.root, msg, Snackbar.LENGTH_INDEFINITE)
+                            .setAction(R.string.retry) { adapter.retry() }
+                            .show()
+                    }
+                }
             }
-        }
-
-        viewModel.state.observe(viewLifecycleOwner) { state ->
-            binding.swipeRefresh.isRefreshing = state.loading
-
-            val err = state.error ?: return@observe
-            val msg = err.message ?: getString(R.string.error_unknown)
-
-            if (lastErrorMessage == msg) return@observe
-            lastErrorMessage = msg
-
-            Snackbar.make(binding.root, msg, Snackbar.LENGTH_INDEFINITE)
-                .setAction(R.string.retry) { viewModel.retry() }
-                .show()
         }
     }
 
     private fun setupClickListeners() {
         binding.add.setOnClickListener {
             findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
-        }
-
-        binding.newerShow.setOnClickListener {
-            viewModel.showNewer()
-            binding.list.smoothScrollToPosition(0)
-        }
-
-        binding.newerCard.setOnClickListener {
-            viewModel.showNewer()
-            binding.list.smoothScrollToPosition(0)
         }
     }
 

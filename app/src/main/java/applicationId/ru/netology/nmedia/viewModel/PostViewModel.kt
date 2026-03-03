@@ -1,13 +1,17 @@
 package applicationId.ru.netology.nmedia.viewModel
 
-import androidx.lifecycle.*
-import applicationId.ru.netology.nmedia.auth.AuthRepository
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.error.AppError
 import applicationId.ru.netology.nmedia.error.UnknownError
 import applicationId.ru.netology.nmedia.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,61 +22,16 @@ data class FeedState(
 
 @HiltViewModel
 class PostViewModel @Inject constructor(
-    private val repository: PostRepository,
-    private val authRepository: AuthRepository
+    private val repository: PostRepository
 ) : ViewModel() {
 
-    val data = repository.data.asLiveData()
-    val newerCount = repository.newerCount.asLiveData()
+    // PagingData поток
+    val data: Flow<PagingData<Post>> = repository.data().cachedIn(viewModelScope)
 
-    private val _state = MutableLiveData(FeedState())
-    val state: LiveData<FeedState> = _state
-
-    private var lastAction: (suspend () -> Unit)? = null
-
-    init {
-        // Первоначальная загрузка
-        loadPosts()
-
-        // Следим за изменениями статуса аутентификации
-        viewModelScope.launch {
-            authRepository.authState
-                .distinctUntilChanged()
-                .collect { authState ->
-                    // При любом изменении (логин/логаут) перезагружаем данные с сервера
-                    loadPosts()
-                }
-        }
-
-        startNewerPolling()
-    }
-
-    fun loadPosts() = runAction { repository.refresh() }
-    fun likeById(id: Long) = runAction { repository.likeById(id) }
-    fun removeById(id: Long) = runAction { repository.removeById(id) }
-    fun save(content: String) = runAction { repository.save(content) }
-    fun edit(id: Long, content: String) = runAction { repository.edit(id, content) }
-    fun showNewer() = runAction { repository.showNewer() }
-
-    fun retry() {
-        lastAction?.let { runAction(it) }
-    }
-
-    private fun startNewerPolling() {
-        viewModelScope.launch {
-            while (true) {
-                delay(10_000)
-                try {
-                    repository.getNewer()
-                } catch (e: Exception) {
-                    // игнорируем ошибки при опросе
-                }
-            }
-        }
-    }
+    private val _state = MutableStateFlow(FeedState())
+    val state = _state.asStateFlow()
 
     private fun runAction(action: suspend () -> Unit) {
-        lastAction = action
         viewModelScope.launch {
             _state.value = FeedState(loading = true)
             try {
@@ -85,4 +44,9 @@ class PostViewModel @Inject constructor(
             }
         }
     }
+
+    fun likeById(id: Long) = runAction { repository.likeById(id) }
+    fun removeById(id: Long) = runAction { repository.removeById(id) }
+    fun save(content: String) = runAction { repository.save(content) }
+    fun edit(id: Long, content: String) = runAction { repository.edit(id, content) }
 }

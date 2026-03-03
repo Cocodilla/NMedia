@@ -5,23 +5,40 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import applicationId.ru.netology.nmedia.R
+import applicationId.ru.netology.nmedia.dao.PostDao
 import applicationId.ru.netology.nmedia.databinding.FragmentPostBinding
 import applicationId.ru.netology.nmedia.dto.Post
+import applicationId.ru.netology.nmedia.entity.PostEntity
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class PostFragment : Fragment() {
 
     private var _binding: FragmentPostBinding? = null
     private val binding get() = _binding!!
+
     private val viewModel: PostViewModel by activityViewModels()
     private val args: PostFragmentArgs by navArgs()
+
+    @Inject
+    lateinit var postDao: PostDao
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -37,57 +54,52 @@ class PostFragment : Fragment() {
 
         val postId = args.postId
 
-        if (viewModel.data.value.isNullOrEmpty()) {
-            viewModel.loadPosts()
-        }
-
-        viewModel.data.observe(viewLifecycleOwner) { posts ->
-            val post = posts.find { it.id == postId }
-            if (post == null) {
-                findNavController().navigateUp()
-                return@observe
-            }
-            setupPost(post)
-        }
-
-        (requireActivity() as? androidx.appcompat.app.AppCompatActivity)
+        // Кнопка "назад" в toolbar
+        (requireActivity() as? AppCompatActivity)
             ?.supportActionBar
             ?.setDisplayHomeAsUpEnabled(true)
+
+        // Подписываемся на конкретный пост из Room
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                postDao.observeById(postId)
+                    .map { entity -> entity?.toDto() }
+                    .collectLatest { post ->
+                        // Если пост исчез (удалили/нет в базе) — уходим назад
+                        if (post == null) {
+                            findNavController().navigateUp()
+                            return@collectLatest
+                        }
+                        setupPost(post)
+                    }
+            }
+        }
     }
 
-    private fun setupPost(post: Post) {
-        binding.apply {
-            author.text = post.author
-            published.text = post.published
-            content.text = post.content
-            likeCount.text = post.likes.toString()
-            shareCount.text = post.shares.toString()
-            viewsCount.text = post.views.toString()
+    private fun setupPost(post: Post) = with(binding) {
+        // Если у тебя в layout нет прогресса — эту строку можно удалить
+        // progress.isVisible = false
 
-            like.setImageResource(
-                if (post.likedByMe) R.drawable.love_like_heart_icon_196980
-                else R.drawable.like_selector
-            )
+        author.text = post.author
+        published.text = post.published
+        content.text = post.content
+        likeCount.text = post.likes.toString()
+        shareCount.text = post.shares.toString()
+        viewsCount.text = post.views.toString()
 
-            like.setOnClickListener {
-                viewModel.likeById(post.id)
-            }
+        like.setImageResource(
+            if (post.likedByMe) R.drawable.love_like_heart_icon_196980
+            else R.drawable.like_selector
+        )
 
-            share.setOnClickListener {
-                sharePost(post.content)
-            }
+        like.setOnClickListener { viewModel.likeById(post.id) }
+        share.setOnClickListener { sharePost(post.content) }
+        menu.setOnClickListener { showMenu(post, it) }
 
-            menu.setOnClickListener {
-                showMenu(post, it)
-            }
-
-            if (post.video.isNullOrEmpty()) {
-                videoGroup.visibility = View.GONE
-            } else {
-                videoGroup.visibility = View.VISIBLE
-                playButton.setOnClickListener { playVideo(post.video) }
-                videoGroup.setOnClickListener { playVideo(post.video) }
-            }
+        videoGroup.isVisible = !post.video.isNullOrEmpty()
+        if (!post.video.isNullOrEmpty()) {
+            playButton.setOnClickListener { playVideo(post.video) }
+            videoGroup.setOnClickListener { playVideo(post.video) }
         }
     }
 
@@ -97,15 +109,18 @@ class PostFragment : Fragment() {
             setOnMenuItemClickListener { menuItem ->
                 when (menuItem.itemId) {
                     R.id.edit -> {
-                        val action = PostFragmentDirections.actionPostFragmentToNewPostFragment(post)
+                        val action = PostFragmentDirections
+                            .actionPostFragmentToNewPostFragment(post)
                         findNavController().navigate(action)
                         true
                     }
+
                     R.id.remove -> {
                         viewModel.removeById(post.id)
                         findNavController().navigateUp()
                         true
                     }
+
                     else -> false
                 }
             }

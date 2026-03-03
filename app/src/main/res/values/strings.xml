@@ -50,6 +50,7 @@
     <string name="show">Показать</string>
     <string name="add_post">Добавить пост</string>
     <string name="newer_posts_count">Новые посты: %1$d</string>
+    <string name="add">Добавить</string>
 
 
 </resources>
