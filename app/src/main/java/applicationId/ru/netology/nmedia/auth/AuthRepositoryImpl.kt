@@ -36,12 +36,11 @@ class AuthRepositoryImpl @Inject constructor(
 
     override suspend fun login(login: String, pass: String) {
         try {
-            val response = service.authenticate(AuthRequest(login, pass))
+            val response = service.authenticate(login, pass)
             if (!response.isSuccessful) throw ApiError(response.code(), response.message())
             val body = response.body() ?: throw ApiError(response.code(), response.message())
 
             local.setAuth(body.id, body.token)
-
         } catch (e: IOException) {
             throw NetworkError
         } catch (e: ApiError) {

@@ -67,6 +67,7 @@ class PostAdapter(
             views.text = post.views.toString()
 
             videoGroup.visibility = if (post.video.isNullOrEmpty()) View.GONE else View.VISIBLE
+            menu.visibility = if (post.ownedByMe) View.VISIBLE else View.GONE
 
             val avatarUrl = post.authorAvatar?.let { fileName ->
                 "${BASE_URL}avatars/$fileName"

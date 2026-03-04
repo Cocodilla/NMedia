@@ -11,7 +11,8 @@ data class PostApiModel(
     val shares: Int = 0,
     val views: Int = 0,
     val video: String? = null,
-    val attachment: AttachmentApiModel? = null
+    val attachment: AttachmentApiModel? = null,
+    val ownedByMe: Boolean = false,
 )
 
 // API -> UI
@@ -32,7 +33,8 @@ fun PostApiModel.toUi(): Post = Post(
             description = it.description,
             type = Attachment.AttachmentType.valueOf(it.type.uppercase())
         )
-    }
+    },
+    ownedByMe = ownedByMe
 )
 
 // UI -> API (save/edit)

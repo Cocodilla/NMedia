@@ -20,7 +20,8 @@ data class Post(
     val views: Int = 0,
     val video: String? = null,
     val authorAvatar: String? = null,
-    val attachment: Attachment? = null
+    val attachment: Attachment? = null,
+    val ownedByMe: Boolean = false
 ) : Parcelable {
     val published: String
         get() = humanDate(publishedTimestamp)

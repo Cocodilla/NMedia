@@ -18,6 +18,7 @@ data class PostEntity(
     val video: String? = null,
     val authorAvatar: String? = null,
     val visible: Boolean = true,
+    val ownedByMe: Boolean = false,
 ) {
     fun toDto(): Post = Post(
         id = id,
@@ -30,6 +31,7 @@ data class PostEntity(
         views = views,
         video = video,
         authorAvatar = authorAvatar,
+        ownedByMe = ownedByMe,
         attachment = null // в базе не храним, при необходимости можно добавить
     )
 
@@ -45,7 +47,8 @@ data class PostEntity(
             views = dto.views,
             video = dto.video,
             authorAvatar = dto.authorAvatar,
-            visible = visible
+            visible = visible,
+            ownedByMe = dto.ownedByMe,
         )
     }
 }
