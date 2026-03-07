@@ -16,6 +16,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.adapter.PostAdapter
+import applicationId.ru.netology.nmedia.adapter.PostsLoadStateAdapter
 import applicationId.ru.netology.nmedia.databinding.FragmentFeedBinding
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.viewModel.PostViewModel
@@ -32,8 +33,10 @@ class FeedFragment : Fragment() {
     private var _binding: FragmentFeedBinding? = null
     private val binding get() = _binding!!
 
-    private var lastErrorMessage: String? = null
     private lateinit var adapter: PostAdapter
+
+    // не показывать одинаковую ошибку бесконечно
+    private var lastErrorMessage: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -45,99 +48,150 @@ class FeedFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
         setupRecyclerView()
         setupSwipeRefresh()
-        setupPagingCollectors()
-        setupClickListeners()
+        observePaging()
+        setupClicks()
     }
 
     private fun setupRecyclerView() {
+
         adapter = PostAdapter(object : PostAdapter.OnInteractionListener {
-            override fun onLike(post: Post) = viewModel.likeById(post.id)
-            override fun onShare(post: Post) = sharePost(post.content)
-            override fun onRemove(post: Post) = viewModel.removeById(post.id)
+
+            override fun onLike(post: Post) =
+                viewModel.likeById(post.id)
+
+            override fun onShare(post: Post) =
+                sharePost(post.content)
+
+            override fun onRemove(post: Post) =
+                viewModel.removeById(post.id)
+
             override fun onEdit(post: Post) {
-                val action = FeedFragmentDirections.actionFeedFragmentToNewPostFragment(post)
+                val action =
+                    FeedFragmentDirections
+                        .actionFeedFragmentToNewPostFragment(post)
                 findNavController().navigate(action)
             }
-            override fun onVideoPlay(post: Post) = playVideo(post.video)
+
+            override fun onVideoPlay(post: Post) =
+                playVideo(post.video)
+
             override fun onPostClick(post: Post) {
-                val action = FeedFragmentDirections.actionFeedFragmentToPostFragment(post.id)
+                val action =
+                    FeedFragmentDirections
+                        .actionFeedFragmentToPostFragment(post.id)
                 findNavController().navigate(action)
             }
         })
 
         binding.list.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            setHasFixedSize(true)
-            adapter = this@FeedFragment.adapter
+
+            adapter = this@FeedFragment.adapter.withLoadStateFooter(
+                footer = PostsLoadStateAdapter {
+                    this@FeedFragment.adapter.retry()
+                }
+            )
         }
     }
 
     private fun setupSwipeRefresh() {
+
         binding.swipeRefresh.setOnRefreshListener {
             adapter.refresh()
         }
     }
 
-    private fun setupPagingCollectors() {
+    private fun observePaging() {
+
         viewLifecycleOwner.lifecycleScope.launch {
+
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-
                 launch {
-                    viewModel.data.collectLatest { pagingData ->
-                        adapter.submitData(pagingData)
+
+                    viewModel.data.collectLatest {
+                        adapter.submitData(it)
                     }
                 }
 
-                //  Состояния загрузки (прогресс/ошибка)
                 launch {
+
                     adapter.loadStateFlow.collectLatest { state ->
-                        // Показываем "крутилку" только когда идет refresh
-                        binding.swipeRefresh.isRefreshing = state.refresh is LoadState.Loading
 
-                        // Ошибка может быть в refresh или append
+                        binding.swipeRefresh.isRefreshing =
+                            state.refresh is LoadState.Loading
+
                         val errorState = when {
-                            state.refresh is LoadState.Error -> state.refresh as LoadState.Error
-                            state.append is LoadState.Error -> state.append as LoadState.Error
-                            state.prepend is LoadState.Error -> state.prepend as LoadState.Error
+                            state.refresh is LoadState.Error ->
+                                state.refresh as LoadState.Error
+
+                            state.append is LoadState.Error ->
+                                state.append as LoadState.Error
+
                             else -> null
-                        } ?: return@collectLatest
+                        }
 
-                        val msg = errorState.error.message ?: getString(R.string.error_unknown)
-                        if (lastErrorMessage == msg) return@collectLatest
-                        lastErrorMessage = msg
+                        errorState?.let {
 
-                        Snackbar.make(binding.root, msg, Snackbar.LENGTH_INDEFINITE)
-                            .setAction(R.string.retry) { adapter.retry() }
-                            .show()
+                            val message =
+                                it.error.message
+                                    ?: getString(R.string.error_unknown)
+
+                            // предотвращаем повторный показ одной и той же ошибки
+                            if (message == lastErrorMessage) return@let
+                            lastErrorMessage = message
+
+                            Snackbar.make(
+                                binding.root,
+                                message,
+                                Snackbar.LENGTH_INDEFINITE
+                            ).setAction(R.string.retry) {
+                                adapter.retry()
+                            }.show()
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun setupClickListeners() {
+    private fun setupClicks() {
+
         binding.add.setOnClickListener {
-            findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
+            findNavController().navigate(
+                R.id.action_feedFragment_to_newPostFragment
+            )
         }
     }
 
     private fun sharePost(content: String) {
+
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, content)
         }
-        startActivity(Intent.createChooser(intent, getString(R.string.chooser_share_post)))
+
+        startActivity(
+            Intent.createChooser(
+                intent,
+                getString(R.string.chooser_share_post)
+            )
+        )
     }
 
     private fun playVideo(videoUrl: String?) {
+
         videoUrl?.let { url ->
+
             val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-            val chooser = Intent.createChooser(intent, getString(R.string.chooser_play_video))
+
+            val chooser = Intent.createChooser(
+                intent,
+                getString(R.string.chooser_play_video)
+            )
+
             if (intent.resolveActivity(requireActivity().packageManager) != null) {
                 startActivity(chooser)
             }
