@@ -1,10 +1,12 @@
 package applicationId.ru.netology.nmedia.repository
 
-import androidx.paging.*
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.map
 import applicationId.ru.netology.nmedia.auth.AuthRepository
 import applicationId.ru.netology.nmedia.dao.PostDao
-import applicationId.ru.netology.nmedia.dao.PostRemoteKeyDao
-import applicationId.ru.netology.nmedia.db.AppDb
 import applicationId.ru.netology.nmedia.dto.Post
 import applicationId.ru.netology.nmedia.dto.PostsService
 import applicationId.ru.netology.nmedia.dto.toApiForSave
@@ -24,12 +26,11 @@ import javax.inject.Singleton
 @OptIn(ExperimentalPagingApi::class)
 @Singleton
 class PostRepositoryImpl @Inject constructor(
-    private val db: AppDb,
     private val dao: PostDao,
-    private val keyDao: PostRemoteKeyDao,
     private val service: PostsService,
     private val authRepository: AuthRepository
 ) : PostRepository {
+
     override fun data(): Flow<PagingData<Post>> {
         return authRepository.authState
             .map { it.token }
@@ -42,9 +43,7 @@ class PostRepositoryImpl @Inject constructor(
                         enablePlaceholders = false
                     ),
                     remoteMediator = PostRemoteMediator(
-                        db = db,
                         postDao = dao,
-                        keyDao = keyDao,
                         service = service
                     ),
                     pagingSourceFactory = { dao.pagingSource() }
@@ -58,7 +57,6 @@ class PostRepositoryImpl @Inject constructor(
         val current = dao.getById(id) ?: return
         val willLike = !current.likedByMe
 
-        // optimistic update
         dao.toggleLikeLocal(id)
 
         try {
@@ -66,15 +64,15 @@ class PostRepositoryImpl @Inject constructor(
                 if (willLike) service.likeById(id)
                 else service.unlikeById(id)
 
-            if (!response.isSuccessful)
+            if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
+            }
 
             val body = response.body()
                 ?: throw ApiError(response.code(), response.message())
 
             dao.upsert(PostEntity.fromDto(body.toUi()))
         } catch (e: Exception) {
-            // rollback
             dao.toggleLikeLocal(id)
 
             when (e) {
@@ -91,8 +89,9 @@ class PostRepositoryImpl @Inject constructor(
 
         try {
             val response = service.removeById(id)
-            if (!response.isSuccessful)
+            if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
+            }
         } catch (e: Exception) {
             backup?.let { dao.upsert(it) }
 
@@ -116,13 +115,15 @@ class PostRepositoryImpl @Inject constructor(
             views = 0,
             video = null,
             authorAvatar = null,
-            attachment = null
+            attachment = null,
+            ownedByMe = true
         )
 
         try {
             val response = service.save(post.toApiForSave())
-            if (!response.isSuccessful)
+            if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
+            }
 
             val body = response.body()
                 ?: throw ApiError(response.code(), response.message())
@@ -143,8 +144,9 @@ class PostRepositoryImpl @Inject constructor(
 
         try {
             val response = service.save(updated.toApiForSave())
-            if (!response.isSuccessful)
+            if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
+            }
 
             val body = response.body()
                 ?: throw ApiError(response.code(), response.message())

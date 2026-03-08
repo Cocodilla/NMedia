@@ -22,8 +22,4 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun providePostDao(appDb: AppDb) = appDb.postDao()
-
-    @Provides
-    @Singleton
-    fun providePostRemoteKeyDao(appDb: AppDb) = appDb.postRemoteKeyDao()
 }

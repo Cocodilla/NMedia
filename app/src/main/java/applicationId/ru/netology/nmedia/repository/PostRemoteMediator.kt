@@ -1,10 +1,10 @@
 package applicationId.ru.netology.nmedia.repository
 
-import androidx.paging.*
-import androidx.room.withTransaction
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.LoadType
+import androidx.paging.PagingState
+import androidx.paging.RemoteMediator
 import applicationId.ru.netology.nmedia.dao.PostDao
-import applicationId.ru.netology.nmedia.dao.PostRemoteKeyDao
-import applicationId.ru.netology.nmedia.db.AppDb
 import applicationId.ru.netology.nmedia.dto.PostsService
 import applicationId.ru.netology.nmedia.dto.toUi
 import applicationId.ru.netology.nmedia.entity.PostEntity
@@ -15,9 +15,7 @@ import java.io.IOException
 
 @OptIn(ExperimentalPagingApi::class)
 class PostRemoteMediator(
-    private val db: AppDb,
     private val postDao: PostDao,
-    private val keyDao: PostRemoteKeyDao,
     private val service: PostsService
 ) : RemoteMediator<Int, PostEntity>() {
 
@@ -25,77 +23,64 @@ class PostRemoteMediator(
         loadType: LoadType,
         state: PagingState<Int, PostEntity>
     ): MediatorResult {
-
         return try {
-
             val pageSize = state.config.pageSize
 
             when (loadType) {
-
                 LoadType.REFRESH -> {
-
                     val maxId = postDao.maxId()
 
                     val response = if (maxId == null) {
-                        // БД пустая
+                        // БД пустая: первая загрузка
                         service.getLatest(pageSize)
                     } else {
-                        // получаем только новые посты
-                        service.getNewer(maxId, pageSize)
+                        // БД не пустая: подтягиваем только новые сверху
+                        service.getAfter(maxId, pageSize)
                     }
 
-                    if (!response.isSuccessful)
+                    if (!response.isSuccessful) {
                         throw ApiError(response.code(), response.message())
+                    }
 
                     val body = response.body()
                         ?: throw ApiError(response.code(), response.message())
 
-                    db.withTransaction {
-                        postDao.upsert(
-                            body.map { PostEntity.fromDto(it.toUi()) }
-                        )
-                    }
+                    postDao.upsert(
+                        body.map { PostEntity.fromDto(it.toUi()) }
+                    )
 
                     MediatorResult.Success(
                         endOfPaginationReached = body.isEmpty()
                     )
                 }
 
-                /**
-                 * PREPEND отключён
-                 */
+                // PREPEND отключён
                 LoadType.PREPEND -> {
                     MediatorResult.Success(endOfPaginationReached = true)
                 }
 
-                /**
-                 * APPEND — загрузка старых постов
-                 */
                 LoadType.APPEND -> {
-
                     val minId = postDao.minId()
-                        ?: return MediatorResult.Success(true)
+                        ?: return MediatorResult.Success(endOfPaginationReached = true)
 
                     val response = service.getBefore(minId, pageSize)
 
-                    if (!response.isSuccessful)
+                    if (!response.isSuccessful) {
                         throw ApiError(response.code(), response.message())
+                    }
 
                     val body = response.body()
                         ?: throw ApiError(response.code(), response.message())
 
-                    db.withTransaction {
-                        postDao.upsert(
-                            body.map { PostEntity.fromDto(it.toUi()) }
-                        )
-                    }
+                    postDao.upsert(
+                        body.map { PostEntity.fromDto(it.toUi()) }
+                    )
 
                     MediatorResult.Success(
                         endOfPaginationReached = body.isEmpty()
                     )
                 }
             }
-
         } catch (e: IOException) {
             MediatorResult.Error(NetworkError)
         } catch (e: ApiError) {

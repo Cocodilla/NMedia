@@ -10,13 +10,20 @@ interface PostsService {
         @Query("count") count: Int
     ): Response<List<PostApiModel>>
 
-
-    @GET("api/posts/{id}/newer")
-    suspend fun getNewer(
+    /**
+     * Для REFRESH:
+     * сервер возвращает ограниченную выборку постов новее указанного id.
+     */
+    @GET("api/posts/{id}/after")
+    suspend fun getAfter(
         @Path("id") id: Long,
         @Query("count") count: Int
     ): Response<List<PostApiModel>>
 
+    /**
+     * Для APPEND:
+     * получаем более старые посты.
+     */
     @GET("api/posts/{id}/before")
     suspend fun getBefore(
         @Path("id") id: Long,
