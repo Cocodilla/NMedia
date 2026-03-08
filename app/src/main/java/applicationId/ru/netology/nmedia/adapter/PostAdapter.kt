@@ -1,22 +1,17 @@
 package applicationId.ru.netology.nmedia.adapter
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.PopupMenu
 import androidx.paging.PagingDataAdapter
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import applicationId.ru.netology.nmedia.R
 import applicationId.ru.netology.nmedia.databinding.CardPostBinding
-import applicationId.ru.netology.nmedia.dto.Attachment
+import applicationId.ru.netology.nmedia.databinding.ItemSeparatorBinding
 import applicationId.ru.netology.nmedia.dto.Post
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import applicationId.ru.netology.nmedia.model.FeedItem
 
 class PostAdapter(
     private val interactionListener: OnInteractionListener
-) : PagingDataAdapter<Post, PostAdapter.ViewHolder>(PostDiffCallback()) {
+) : PagingDataAdapter<FeedItem, RecyclerView.ViewHolder>(FeedItemDiffCallback()) {
 
     interface OnInteractionListener {
         fun onLike(post: Post)
@@ -27,113 +22,41 @@ class PostAdapter(
         fun onPostClick(post: Post)
     }
 
-    inner class ViewHolder(
-        private val binding: CardPostBinding
-    ) : RecyclerView.ViewHolder(binding.root) {
-
-        init {
-            binding.root.setOnClickListener {
-                getItem(bindingAdapterPosition)?.let(interactionListener::onPostClick)
-            }
-            binding.like.setOnClickListener {
-                getItem(bindingAdapterPosition)?.let(interactionListener::onLike)
-            }
-            binding.share.setOnClickListener {
-                getItem(bindingAdapterPosition)?.let(interactionListener::onShare)
-            }
-            binding.menu.setOnClickListener { v ->
-                getItem(bindingAdapterPosition)?.let { post -> showMenu(post, v) }
-            }
-            binding.videoGroup.setOnClickListener {
-                getItem(bindingAdapterPosition)?.let { post ->
-                    if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
-                }
-            }
-            binding.playButton.setOnClickListener {
-                getItem(bindingAdapterPosition)?.let { post ->
-                    if (!post.video.isNullOrEmpty()) interactionListener.onVideoPlay(post)
-                }
-            }
+    override fun getItemViewType(position: Int): Int =
+        when (peek(position)) {
+            is FeedItem.PostItem -> TYPE_POST
+            is FeedItem.Separator -> TYPE_SEPARATOR
+            null -> TYPE_POST
         }
 
-        fun bind(post: Post) = with(binding) {
-            author.text = post.author
-            published.text = post.published
-            content.text = post.content
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = LayoutInflater.from(parent.context)
 
-            like.isChecked = post.likedByMe
-            like.text = post.likes.toString()
-            share.text = post.shares.toString()
-            views.text = post.views.toString()
-
-            videoGroup.visibility = if (post.video.isNullOrEmpty()) View.GONE else View.VISIBLE
-            menu.visibility = if (post.ownedByMe) View.VISIBLE else View.GONE
-
-            val avatarUrl = post.authorAvatar?.let { fileName ->
-                "${BASE_URL}avatars/$fileName"
+        return when (viewType) {
+            TYPE_POST -> {
+                val binding = CardPostBinding.inflate(inflater, parent, false)
+                PostViewHolder(binding, interactionListener)
             }
 
-            Glide.with(avatar)
-                .load(avatarUrl)
-                .timeout(10_000)
-                .circleCrop()
-                .transition(DrawableTransitionOptions.withCrossFade())
-                .placeholder(R.drawable.ic_avatar_placeholder)
-                .error(R.drawable.ic_avatar_placeholder)
-                .into(avatar)
-
-            val attachment = post.attachment
-            if (attachment != null && attachment.type == Attachment.AttachmentType.IMAGE) {
-                attachmentGroup.visibility = View.VISIBLE
-                val imageUrl = "${BASE_URL}images/${attachment.url}"
-                Glide.with(attachmentImage)
-                    .load(imageUrl)
-                    .timeout(10_000)
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .placeholder(R.drawable.ic_image_placeholder)
-                    .error(R.drawable.ic_image_placeholder)
-                    .into(attachmentImage)
-            } else {
-                attachmentGroup.visibility = View.GONE
-                Glide.with(attachmentImage).clear(attachmentImage)
+            TYPE_SEPARATOR -> {
+                val binding = ItemSeparatorBinding.inflate(inflater, parent, false)
+                SeparatorViewHolder(binding)
             }
-        }
 
-        private fun showMenu(post: Post, view: View) {
-            PopupMenu(view.context, view).apply {
-                inflate(R.menu.menu_post)
-                setOnMenuItemClickListener { item ->
-                    when (item.itemId) {
-                        R.id.edit -> {
-                            interactionListener.onEdit(post)
-                            true
-                        }
-                        R.id.remove -> {
-                            interactionListener.onRemove(post)
-                            true
-                        }
-                        else -> false
-                    }
-                }
-            }.show()
+            else -> error("Unknown view type: $viewType")
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = CardPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return ViewHolder(binding)
-    }
-
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        getItem(position)?.let(holder::bind)
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (val item = getItem(position)) {
+            is FeedItem.PostItem -> (holder as PostViewHolder).bind(item.post)
+            is FeedItem.Separator -> (holder as SeparatorViewHolder).bind(item)
+            null -> Unit
+        }
     }
 
     private companion object {
-        private const val BASE_URL = "http://10.0.2.2:9999/"
+        const val TYPE_POST = 0
+        const val TYPE_SEPARATOR = 1
     }
-}
-
-class PostDiffCallback : DiffUtil.ItemCallback<Post>() {
-    override fun areItemsTheSame(oldItem: Post, newItem: Post): Boolean = oldItem.id == newItem.id
-    override fun areContentsTheSame(oldItem: Post, newItem: Post): Boolean = oldItem == newItem
 }
