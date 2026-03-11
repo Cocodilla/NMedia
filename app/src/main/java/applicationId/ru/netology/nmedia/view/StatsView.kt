@@ -1,13 +1,13 @@
 package applicationId.ru.netology.nmedia.view
 
+import android.animation.ValueAnimator
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.PointF
-import android.graphics.RectF
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import android.view.animation.DecelerateInterpolator
 import applicationId.ru.netology.nmedia.R
+import kotlin.math.max
 import kotlin.math.min
 
 class StatsView @JvmOverloads constructor(
@@ -16,36 +16,46 @@ class StatsView @JvmOverloads constructor(
     defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
 
-    /**
-     * Сырые значения сегментов.
-     */
+    enum class FillMode {
+        PARALLEL,
+        SEQUENTIAL,
+        BIDIRECTIONAL,
+    }
+
     var data: List<Float> = emptyList()
         set(value) {
             field = value.filter { it > 0f }
-            invalidate()
+            startAnimation()
         }
 
     /**
-     * Максимум шкалы.
-     * Если null -> считаем, что весь круг = sum(data)
-     * Тогда диаграмма всегда заполнена на 100%.
-     * Если задано число больше суммы data, то появится незаполненная часть.
+     * Если null — круг считается полностью заполненным суммой data.
+     * Если больше суммы data — появится незаполненная часть.
      */
     var maxValue: Float? = null
         set(value) {
             field = value?.takeIf { it > 0f }
+            startAnimation()
+        }
+
+    var fillMode: FillMode = FillMode.PARALLEL
+        set(value) {
+            field = value
             invalidate()
         }
 
-    private var lineWidth = dp(20f).toFloat()
-    private var fontSize = dp(24f).toFloat()
+    private var animationProgress = 0f
+
+    private var lineWidth = dp(20f)
+    private var fontSize = dp(24f)
+    private var animationDuration = 1500L
     private var emptyColor = 0xFFDADADA.toInt()
 
     private var colors = listOf(
-        0xFFFF1F6A.toInt(), // pink
-        0xFF5A22EA.toInt(), // purple
-        0xFF1ECFC5.toInt(), // cyan
-        0xFFF4D400.toInt(), // yellow
+        0xFFFF1F6A.toInt(),
+        0xFF5A22EA.toInt(),
+        0xFF1ECFC5.toInt(),
+        0xFFF4D400.toInt(),
         0xFF4CAF50.toInt(),
         0xFFFF9800.toInt(),
         0xFF03A9F4.toInt(),
@@ -54,27 +64,27 @@ class StatsView @JvmOverloads constructor(
         0xFF009688.toInt(),
     )
 
-    private var radius = 0f
-    private var center = PointF()
-    private val oval = RectF()
-
     private val arcPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
-        strokeJoin = Paint.Join.ROUND
     }
 
     private val emptyPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
         strokeCap = Paint.Cap.ROUND
-        strokeJoin = Paint.Join.ROUND
     }
 
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
-        color = 0xFF000000.toInt()
+        color = Color.BLACK
     }
+
+    private val oval = RectF()
+    private var radius = 0f
+    private var center = PointF()
+
+    private var animator: ValueAnimator? = null
 
     init {
         context.theme.obtainStyledAttributes(
@@ -84,31 +94,23 @@ class StatsView @JvmOverloads constructor(
             0
         ).apply {
             try {
-                lineWidth = getDimension(
-                    R.styleable.StatsView_lineWidth,
-                    lineWidth
-                )
-                fontSize = getDimension(
-                    R.styleable.StatsView_fontSize,
-                    fontSize
-                )
+                lineWidth = getDimension(R.styleable.StatsView_lineWidth, lineWidth)
+                fontSize = getDimension(R.styleable.StatsView_fontSize, fontSize)
+                animationDuration = getInt(
+                    R.styleable.StatsView_animationDuration,
+                    animationDuration.toInt()
+                ).toLong()
+
                 emptyColor = getColor(
                     R.styleable.StatsView_emptyColor,
                     emptyColor
                 )
 
-                colors = listOf(
-                    getColor(R.styleable.StatsView_color1, colors[0]),
-                    getColor(R.styleable.StatsView_color2, colors[1]),
-                    getColor(R.styleable.StatsView_color3, colors[2]),
-                    getColor(R.styleable.StatsView_color4, colors[3]),
-                    getColor(R.styleable.StatsView_color5, colors[4]),
-                    getColor(R.styleable.StatsView_color6, colors[5]),
-                    getColor(R.styleable.StatsView_color7, colors[6]),
-                    getColor(R.styleable.StatsView_color8, colors[7]),
-                    getColor(R.styleable.StatsView_color9, colors[8]),
-                    getColor(R.styleable.StatsView_color10, colors[9]),
-                )
+                fillMode = when (getInt(R.styleable.StatsView_fillMode, 0)) {
+                    1 -> FillMode.SEQUENTIAL
+                    2 -> FillMode.BIDIRECTIONAL
+                    else -> FillMode.PARALLEL
+                }
             } finally {
                 recycle()
             }
@@ -120,18 +122,19 @@ class StatsView @JvmOverloads constructor(
         textPaint.textSize = fontSize
     }
 
-    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        super.onSizeChanged(w, h, oldw, oldh)
+    override fun onDetachedFromWindow() {
+        animator?.cancel()
+        super.onDetachedFromWindow()
+    }
 
-        val horizontalPadding = paddingLeft + paddingRight
-        val verticalPadding = paddingTop + paddingBottom
-        val minSide = min(w - horizontalPadding, h - verticalPadding).toFloat()
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        val minSide = min(w - paddingLeft - paddingRight, h - paddingTop - paddingBottom)
 
         radius = minSide / 2f - lineWidth / 2f
 
         center = PointF(
-            paddingLeft + (w - horizontalPadding) / 2f,
-            paddingTop + (h - verticalPadding) / 2f
+            paddingLeft + (w - paddingLeft - paddingRight) / 2f,
+            paddingTop + (h - paddingTop - paddingBottom) / 2f
         )
 
         oval.set(
@@ -143,87 +146,111 @@ class StatsView @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        super.onDraw(canvas)
-
         if (radius <= 0f) return
 
         val values = data.filter { it > 0f }
         val sum = values.sum()
 
-        val targetMax = maxValue?.coerceAtLeast(sum)?.takeIf { it > 0f } ?: sum
-
-        if (targetMax <= 0f) {
-            drawCenterText(canvas, 0f)
-            return
-        }
+        val targetMax = maxValue?.let { max(it, sum) } ?: sum
+        if (targetMax <= 0f) return
 
         val filledFraction = (sum / targetMax).coerceIn(0f, 1f)
 
-        // Сначала рисуем серую базовую окружность
-        canvas.drawArc(
-            oval,
-            START_ANGLE,
-            FULL_ANGLE,
-            false,
-            emptyPaint
-        )
+        val rotationAngle = FULL_ANGLE * animationProgress
+        canvas.save()
+        canvas.rotate(rotationAngle, center.x, center.y)
 
-        if (values.isNotEmpty() && sum > 0f) {
-            var startFrom = START_ANGLE
+        canvas.drawArc(oval, START_ANGLE, FULL_ANGLE, false, emptyPaint)
 
-            values.forEachIndexed { index, value ->
-                val sweep = FULL_ANGLE * (value / targetMax)
+        val targetSweeps = values.map { FULL_ANGLE * (it / targetMax) }
 
-                if (sweep <= 0f) return@forEachIndexed
-
-                arcPaint.color = colors[index % colors.size]
-
-                /**
-                 * последний сегмент не доводим до полного 360,
-                 * чтобы его круглый конец не налезал на начало первого.
-                 */
-                val adjustedSweep =
-                    if (index == values.lastIndex && filledFraction >= 1f) {
-                        (sweep - DOT_FIX_DEGREES).coerceAtLeast(0f)
-                    } else {
-                        sweep
-                    }
-
-                canvas.drawArc(
-                    oval,
-                    startFrom,
-                    adjustedSweep,
-                    false,
-                    arcPaint
-                )
-
-                startFrom += sweep
-            }
+        when (fillMode) {
+            FillMode.PARALLEL -> drawParallel(canvas, targetSweeps, filledFraction)
+            FillMode.SEQUENTIAL -> drawSequential(canvas, targetSweeps, filledFraction)
+            FillMode.BIDIRECTIONAL -> drawBidirectional(canvas, targetSweeps, filledFraction)
         }
 
-        drawCenterText(canvas, filledFraction)
+        canvas.restore()
+
+        drawCenterText(canvas, filledFraction * animationProgress)
     }
 
-    private fun drawCenterText(canvas: Canvas, filledFraction: Float) {
+    private fun drawParallel(canvas: Canvas, sweeps: List<Float>, fraction: Float) {
+        var start = START_ANGLE
+
+        sweeps.forEachIndexed { index, sweep ->
+            val animated = sweep * animationProgress
+
+            arcPaint.color = colors[index % colors.size]
+
+            canvas.drawArc(oval, start, animated, false, arcPaint)
+
+            start += sweep
+        }
+    }
+
+    private fun drawSequential(canvas: Canvas, sweeps: List<Float>, fraction: Float) {
+        var start = START_ANGLE
+        var remaining = FULL_ANGLE * fraction * animationProgress
+
+        sweeps.forEachIndexed { index, sweep ->
+            val drawSweep = min(sweep, remaining)
+
+            arcPaint.color = colors[index % colors.size]
+
+            canvas.drawArc(oval, start, drawSweep, false, arcPaint)
+
+            remaining -= sweep
+            start += sweep
+        }
+    }
+
+    private fun drawBidirectional(canvas: Canvas, sweeps: List<Float>, fraction: Float) {
+        var start = START_ANGLE
+
+        sweeps.forEachIndexed { index, sweep ->
+            val animated = sweep * animationProgress
+
+            val half = animated / 2f
+
+            arcPaint.color = colors[index % colors.size]
+
+            canvas.drawArc(oval, start, half, false, arcPaint)
+            canvas.drawArc(oval, start + sweep - half, half, false, arcPaint)
+
+            start += sweep
+        }
+    }
+
+    private fun drawCenterText(canvas: Canvas, fraction: Float) {
         canvas.drawText(
-            "%.2f%%".format(filledFraction * 100f),
+            "%.2f%%".format(fraction * 100f),
             center.x,
             center.y + textPaint.textSize / 3f,
             textPaint
         )
     }
 
-    private fun dp(value: Float): Int =
-        kotlin.math.ceil(resources.displayMetrics.density * value).toInt()
+    private fun startAnimation() {
+        animator?.cancel()
 
-    private companion object {
-        const val START_ANGLE = -90f
-        const val FULL_ANGLE = 360f
+        animator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = animationDuration
+            interpolator = DecelerateInterpolator()
 
-        /**
-         * Небольшой угол, который убираем у последнего сегмента,
-         * чтобы круглая "шапка" не наползала на старт первого сегмента.
-         */
-        const val DOT_FIX_DEGREES = 0.8f
+            addUpdateListener {
+                animationProgress = it.animatedValue as Float
+                invalidate()
+            }
+
+            start()
+        }
+    }
+
+    private fun dp(v: Float) = resources.displayMetrics.density * v
+
+    companion object {
+        private const val START_ANGLE = -90f
+        private const val FULL_ANGLE = 360f
     }
 }
