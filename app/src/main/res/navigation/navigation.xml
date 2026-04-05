@@ -18,7 +18,6 @@
         <action
             android:id="@+id/action_feedFragment_to_postFragment"
             app:destination="@id/postFragment" />
-
     </fragment>
 
     <fragment
@@ -29,10 +28,9 @@
 
         <argument
             android:name="post"
-            app:argType="applicationId.ru.netology.nmedia.dto.Post"
             android:defaultValue="@null"
+            app:argType="applicationId.ru.netology.nmedia.dto.Post"
             app:nullable="true" />
-
     </fragment>
 
     <fragment
@@ -48,13 +46,25 @@
         <action
             android:id="@+id/action_postFragment_to_newPostFragment"
             app:destination="@id/newPostFragment">
+
             <argument
                 android:name="post"
-                app:argType="applicationId.ru.netology.nmedia.dto.Post"
                 android:defaultValue="@null"
+                app:argType="applicationId.ru.netology.nmedia.dto.Post"
                 app:nullable="true" />
         </action>
-
     </fragment>
+
+    <fragment
+        android:id="@+id/mapFragment"
+        android:name="applicationId.ru.netology.nmedia.fragment.MapFragment"
+        android:label="@string/open_map"
+        tools:layout="@layout/fragment_map" />
+
+    <fragment
+        android:id="@+id/pointsListFragment"
+        android:name="applicationId.ru.netology.nmedia.fragment.PointsListFragment"
+        android:label="@string/all_points"
+        tools:layout="@layout/fragment_points_list" />
 
 </navigation>

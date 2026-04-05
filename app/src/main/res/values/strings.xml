@@ -51,6 +51,15 @@
     <string name="add_post">Добавить пост</string>
     <string name="newer_posts_count">Новые посты: %1$d</string>
     <string name="add">Добавить</string>
+    <string name="all_points" translatable="false">Все точки</string>
+    <string name="no_points" translatable="false">Точек пока нет</string>
+    <string name="create_point" translatable="false">Создать точку</string>
+    <string name="edit_point" translatable="false">Редактировать точку</string>
+    <string name="title" translatable="false">Название</string>
+    <string name="description" translatable="false">Описание</string>
+    <string name="edit" translatable="false">Редактировать</string>
+    <string name="delete" translatable="false">Удалить</string>
+    <string name="open_map" translatable="false">Карта</string>
 
 
 </resources>

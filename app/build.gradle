@@ -99,6 +99,9 @@ dependencies {
 
     // DataStore (храним токен)
     implementation(libs.datastore.preferences)
+
+    implementation("com.google.android.gms:play-services-maps:19.0.0")
+
 }
 
 kapt {

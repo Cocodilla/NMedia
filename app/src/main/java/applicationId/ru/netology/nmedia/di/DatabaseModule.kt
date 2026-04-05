@@ -2,6 +2,8 @@ package applicationId.ru.netology.nmedia.di
 
 import android.content.Context
 import androidx.room.Room
+import applicationId.ru.netology.nmedia.dao.PointDao
+import applicationId.ru.netology.nmedia.dao.PostDao
 import applicationId.ru.netology.nmedia.db.AppDb
 import dagger.Module
 import dagger.Provides
@@ -16,10 +18,19 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideAppDb(@ApplicationContext context: Context): AppDb =
-        Room.databaseBuilder(context, AppDb::class.java, "app.db").build()
+    fun provideDb(
+        @ApplicationContext context: Context,
+    ): AppDb = Room.databaseBuilder(
+        context,
+        AppDb::class.java,
+        "app.db"
+    )
+        .fallbackToDestructiveMigration()
+        .build()
 
     @Provides
-    @Singleton
-    fun providePostDao(appDb: AppDb) = appDb.postDao()
+    fun providePostDao(db: AppDb): PostDao = db.postDao()
+
+    @Provides
+    fun providePointDao(db: AppDb): PointDao = db.pointDao()
 }
