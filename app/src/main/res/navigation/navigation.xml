@@ -18,6 +18,10 @@
         <action
             android:id="@+id/action_feedFragment_to_postFragment"
             app:destination="@id/postFragment" />
+
+        <action
+            android:id="@+id/action_feedFragment_to_mapFragment"
+            app:destination="@id/mapFragment" />
     </fragment>
 
     <fragment
@@ -66,5 +70,4 @@
         android:name="applicationId.ru.netology.nmedia.fragment.PointsListFragment"
         android:label="@string/all_points"
         tools:layout="@layout/fragment_points_list" />
-
 </navigation>

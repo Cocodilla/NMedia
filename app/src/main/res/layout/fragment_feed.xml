@@ -43,4 +43,10 @@
         app:layout_anchorGravity="bottom|end"
         app:srcCompat="@drawable/outline_add_24" />
 
+    <Button
+        android:id="@+id/openMapButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/open_map" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

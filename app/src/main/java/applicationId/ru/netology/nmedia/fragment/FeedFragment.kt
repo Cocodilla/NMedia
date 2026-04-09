@@ -164,6 +164,12 @@ class FeedFragment : Fragment() {
                 R.id.action_feedFragment_to_newPostFragment
             )
         }
+
+        binding.openMapButton.setOnClickListener {
+            findNavController().navigate(
+                R.id.action_feedFragment_to_mapFragment
+            )
+        }
     }
 
     private fun sharePost(content: String) {

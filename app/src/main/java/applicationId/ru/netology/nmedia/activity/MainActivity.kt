@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -25,12 +26,15 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
-    @Inject lateinit var firebaseMessaging: FirebaseMessaging
-    @Inject lateinit var googleApiAvailability: GoogleApiAvailability
+    @Inject
+    lateinit var firebaseMessaging: FirebaseMessaging
+
+    @Inject
+    lateinit var googleApiAvailability: GoogleApiAvailability
 
     private lateinit var binding: ActivityMainBinding
+    private lateinit var navController: NavController
 
-    // Auth VM (для login/logout)
     private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,29 +46,26 @@ class MainActivity : AppCompatActivity() {
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
 
         val appBarConfiguration = AppBarConfiguration(navController.graph)
         setupActionBarWithNavController(navController, appBarConfiguration)
 
-        // Обновляем меню при login/logout
         lifecycleScope.launchWhenStarted {
             authViewModel.authState.collectLatest {
                 invalidateOptionsMenu()
             }
         }
 
-        // FCM token
         firebaseMessaging.token.addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 Log.d("MainActivity", "FCM token: ${task.result}")
             }
         }
 
-        // GoogleApiAvailability
         val result = googleApiAvailability.isGooglePlayServicesAvailable(this)
         if (result != com.google.android.gms.common.ConnectionResult.SUCCESS) {
-            // обработка ошибки, если нужно
+            // при необходимости можно обработать ошибку
         }
 
         Log.d("MainActivity", "onCreate called")
@@ -77,8 +78,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         val authorized = authViewModel.authState.value.isAuthorized
-        menu.findItem(R.id.login).isVisible = !authorized
-        menu.findItem(R.id.logout).isVisible = authorized
+        menu.findItem(R.id.login)?.isVisible = !authorized
+        menu.findItem(R.id.logout)?.isVisible = authorized
         return super.onPrepareOptionsMenu(menu)
     }
 
@@ -88,19 +89,30 @@ class MainActivity : AppCompatActivity() {
                 showLoginDialog()
                 true
             }
+
             R.id.logout -> {
                 authViewModel.logout()
-                // invalidateOptionsMenu() вызовется ещё и из collectLatest, но пусть будет явно
                 invalidateOptionsMenu()
                 true
             }
+
+            R.id.openMap -> {
+                navController.navigate(R.id.mapFragment)
+                true
+            }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
 
     private fun showLoginDialog() {
-        val loginEt = EditText(this).apply { hint = "login" }
-        val passEt = EditText(this).apply { hint = "password" }
+        val loginEt = EditText(this).apply {
+            hint = "login"
+        }
+
+        val passEt = EditText(this).apply {
+            hint = "password"
+        }
 
         val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -123,16 +135,36 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onSupportNavigateUp(): Boolean {
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        val navController = navHostFragment.navController
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 
-    override fun onStart() { super.onStart(); Log.d("MainActivity", "onStart") }
-    override fun onRestart() { super.onRestart(); Log.d("MainActivity", "onRestart") }
-    override fun onResume() { super.onResume(); Log.d("MainActivity", "onResume") }
-    override fun onPause() { super.onPause(); Log.d("MainActivity", "onPause") }
-    override fun onStop() { super.onStop(); Log.d("MainActivity", "onStop") }
-    override fun onDestroy() { super.onDestroy(); Log.d("MainActivity", "onDestroy") }
+    override fun onStart() {
+        super.onStart()
+        Log.d("MainActivity", "onStart")
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        Log.d("MainActivity", "onRestart")
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.d("MainActivity", "onResume")
+    }
+
+    override fun onPause() {
+        super.onPause()
+        Log.d("MainActivity", "onPause")
+    }
+
+    override fun onStop() {
+        super.onStop()
+        Log.d("MainActivity", "onStop")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.d("MainActivity", "onDestroy")
+    }
 }
